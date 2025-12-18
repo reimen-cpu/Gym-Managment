@@ -1,0 +1,415 @@
+#include "GymController.h"
+#include <QDebug>
+
+namespace GymOS::UI::Controllers {
+
+GymController::GymController(QObject *parent) : QObject(parent) {
+  qDebug() << "[GymController] Initialized";
+}
+
+// ============================================================================
+// Métodos invocables desde QML
+// ============================================================================
+
+bool GymController::registerMember(const QString &firstName,
+                                   const QString &lastName,
+                                   const QString &email, const QString &phone,
+                                   int planId, const QDate &startDate,
+                                   double enrollmentFee) {
+  qDebug() << "[GymController] registerMember called";
+  qDebug() << "  - Name:" << firstName << lastName;
+  qDebug() << "  - Email:" << email;
+  qDebug() << "  - Phone:" << phone;
+  qDebug() << "  - Plan ID:" << planId;
+  qDebug() << "  - Start Date:" << startDate;
+  qDebug() << "  - Enrollment Fee:" << enrollmentFee;
+
+  auto &dbManager =
+      GymOS::Infrastructure::Database::DatabaseManager::instance();
+  if (!dbManager.beginTransaction()) {
+    qCritical() << "[GymController] Failed to begin transaction";
+    emit operationError("Error interno: No se pudo iniciar la transacción");
+    return false;
+  }
+
+  try {
+    // 1. Crear el miembro
+    Member member;
+    member.firstName = firstName;
+    member.lastName = lastName;
+    if (!email.isEmpty()) {
+      member.email = email;
+    }
+    if (!phone.isEmpty()) {
+      member.phone = phone;
+    }
+
+    int64_t memberId = m_memberRepo.insert(member);
+    qDebug() << "[GymController] Member created with ID:" << memberId;
+
+    // 2. Crear la suscripción
+    int64_t subscriptionId = m_subscriptionManager.createSubscription(
+        memberId, planId, startDate, enrollmentFee);
+    qDebug() << "[GymController] Subscription created with ID:"
+             << subscriptionId;
+
+    // 3. Registrar transacción financiera inicial (Enrollment Fee)
+    if (enrollmentFee > 0) {
+      m_financeEngine.recordCustomIncome(
+          enrollmentFee,
+          QString("Inscripción - %1 %2").arg(firstName, lastName));
+      qDebug() << "[GymController] Financial entry created for enrollment";
+    }
+
+    // 4. Confirmar transacción
+    if (!dbManager.commitTransaction()) {
+      throw std::runtime_error("Failed to commit transaction");
+    }
+    qDebug() << "[GymController] Transaction committed successfully";
+
+    // 5. Emitir señales de actualización
+    emit membersChanged();
+    emit subscriptionsChanged();
+    emit financialDataChanged();
+    emit operationSuccess("Miembro registrado exitosamente");
+
+    return true;
+  } catch (const std::exception &e) {
+    dbManager.rollbackTransaction();
+    qWarning() << "[GymController] Error registering member (Rolled back):"
+               << e.what();
+    emit operationError(QString("Error al registrar: %1").arg(e.what()));
+    return false;
+  }
+}
+
+bool GymController::recordExpense(const QString &description, double amount) {
+  qDebug() << "[GymController] recordExpense called";
+  qDebug() << "  - Description:" << description;
+  qDebug() << "  - Amount:" << amount;
+
+  try {
+    int64_t entryId = m_financeEngine.recordCustomExpense(amount, description);
+    qDebug() << "[GymController] Expense recorded with ID:" << entryId;
+
+    emit financialDataChanged();
+    emit operationSuccess("Gasto registrado exitosamente");
+    return true;
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error recording expense:" << e.what();
+    emit operationError(QString("Error al registrar gasto: %1").arg(e.what()));
+    return false;
+  }
+}
+
+bool GymController::recordIncome(const QString &description, double amount) {
+  qDebug() << "[GymController] recordIncome called";
+  qDebug() << "  - Description:" << description;
+  qDebug() << "  - Amount:" << amount;
+
+  try {
+    int64_t entryId = m_financeEngine.recordCustomIncome(amount, description);
+    qDebug() << "[GymController] Income recorded with ID:" << entryId;
+
+    emit financialDataChanged();
+    emit operationSuccess("Ingreso registrado exitosamente");
+    return true;
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error recording income:" << e.what();
+    emit operationError(
+        QString("Error al registrar ingreso: %1").arg(e.what()));
+    return false;
+  }
+}
+
+void GymController::setEnrollmentFee(double fee) {
+  auto &dbManager =
+      GymOS::Infrastructure::Database::DatabaseManager::instance();
+  // Upsert enrollment_fee
+  dbManager.executeQuery(
+      "INSERT INTO settings (key, value, updated_at) VALUES ('enrollment_fee', "
+      "?, datetime('now')) "
+      "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = "
+      "excluded.updated_at",
+      {QString::number(fee)});
+
+  emit settingsChanged();
+}
+
+double GymController::getEnrollmentFee() const {
+  auto &dbManager =
+      GymOS::Infrastructure::Database::DatabaseManager::instance();
+  QSqlQuery query = dbManager.executeQuery(
+      "SELECT value FROM settings WHERE key = 'enrollment_fee'");
+  if (query.next()) {
+    return query.value(0).toDouble();
+  }
+  return 0.0;
+}
+
+bool GymController::createPlan(const QString &name, int days, double price) {
+  qDebug() << "[GymController] createPlan called";
+  qDebug() << "  - Name:" << name;
+  qDebug() << "  - Days:" << days;
+  qDebug() << "  - Price:" << price;
+
+  try {
+    Plan plan;
+    plan.name = name;
+    plan.durationDays = days;
+    plan.price = price;
+    plan.isActive = true;
+
+    int64_t planId = m_planRepo.insert(plan);
+    qDebug() << "[GymController] Plan created with ID:" << planId;
+
+    emit plansChanged();
+    emit operationSuccess("Plan creado exitosamente");
+    return true;
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error creating plan:" << e.what();
+    emit operationError(QString("Error al crear plan: %1").arg(e.what()));
+    return false;
+  }
+}
+
+bool GymController::updatePlan(int planId, const QString &name, int days,
+                               double price) {
+  qDebug() << "[GymController] updatePlan called for ID:" << planId;
+
+  try {
+    auto existingPlan = m_planRepo.findById(planId);
+    if (!existingPlan) {
+      emit operationError("Plan no encontrado");
+      return false;
+    }
+
+    Plan plan = *existingPlan;
+    plan.name = name;
+    plan.durationDays = days;
+    plan.price = price;
+
+    m_planRepo.update(plan);
+    qDebug() << "[GymController] Plan updated";
+
+    emit plansChanged();
+    emit operationSuccess("Plan actualizado exitosamente");
+    return true;
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error updating plan:" << e.what();
+    emit operationError(QString("Error al actualizar plan: %1").arg(e.what()));
+    return false;
+  }
+}
+
+bool GymController::togglePlanStatus(int id, bool isActive) {
+  qDebug() << "[GymController] togglePlanStatus called for ID:" << id
+           << " New Status:" << isActive;
+  auto &dbManager =
+      GymOS::Infrastructure::Database::DatabaseManager::instance();
+  QSqlQuery query = dbManager.executeQuery(
+      "UPDATE plans SET is_active = ?, updated_at = datetime('now') WHERE id = "
+      "?",
+      {isActive ? 1 : 0, id});
+
+  if (query.lastError().isValid()) {
+    qWarning() << "[GymController] Error toggling plan status:"
+               << query.lastError().text();
+    emit operationError("Error al cambiar estado del plan");
+    return false;
+  }
+
+  emit plansChanged();
+  return true;
+}
+
+bool GymController::deletePlan(int planId) {
+  qDebug() << "[GymController] deletePlan called for ID:" << planId;
+
+  try {
+    if (m_planRepo.remove(planId)) {
+      emit plansChanged();
+      emit operationSuccess("Plan eliminado exitosamente");
+      return true;
+    } else {
+      emit operationError("No se pudo eliminar el plan");
+      return false;
+    }
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error deleting plan:" << e.what();
+    emit operationError(QString("Error al eliminar plan: %1").arg(e.what()));
+    return false;
+  }
+}
+
+void GymController::refreshData() {
+  qDebug() << "[GymController] refreshData called";
+  emit plansChanged();
+  emit membersChanged();
+  emit subscriptionsChanged();
+  emit financialDataChanged();
+  qDebug() << "[GymController] Data refreshed manually";
+}
+
+QVariantMap GymController::getMemberDetails(int memberId) {
+  auto member = m_memberRepo.findById(memberId);
+  if (!member)
+    return {};
+
+  QVariantMap map;
+  map["id"] = static_cast<int>(member->id);
+  map["firstName"] = member->firstName;
+  map["lastName"] = member->lastName;
+  map["fullName"] = member->fullName();
+  map["email"] = member->email.value_or(""); // Ensure optional is handled
+  map["phone"] = member->phone.value_or(""); // Ensure optional is handled
+  map["registerDate"] = member->createdAt;
+
+  // Get current subscription info
+  // For now returning basic profile. The UI can mix this with subscription data
+  // it already has.
+  return map;
+}
+
+bool GymController::renewSubscription(int memberId, int planId,
+                                      double priceOverride) {
+  qDebug() << "[GymController] Renewing subscription for member" << memberId
+           << "Plan" << planId;
+
+  // Note: SubscriptionManager::renewSubscription currently calculates start
+  // date automatically based on existing sub. Providing startDate as current
+  // date or 'tomorrow' if it handles the overlap logic. The manager logic: if
+  // current sub active, starts after end date. If expired, starts today. We
+  // pass QDate() (invalid) to let manager decide, or QDate::currentDate()?
+  // Manager signature: renewSubscription(memberId, planId, startDate)
+  // We will pass current date, and let manager logic extend if needed.
+
+  int64_t newSubId = m_subscriptionManager.renewSubscription(
+      memberId, planId, QDate::currentDate());
+
+  if (newSubId != -1) {
+    emit subscriptionsChanged();
+    emit financialDataChanged();
+    emit operationSuccess("Suscripción renovada exitosamente");
+    return true;
+  } else {
+    emit operationError("Falló la renovación de la suscripción");
+    return false;
+  }
+}
+
+QVariantList GymController::getPlans() const {
+  QVariantList result;
+  auto plans = m_planRepo.findAll();
+  for (const auto &plan : plans) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(plan.id);
+    item["name"] = plan.name;
+    item["days"] = plan.durationDays;            // Changed from months
+    item["duration"] = plan.formattedDuration(); // Optional helper for UI
+    item["price"] = plan.price;
+    item["isActive"] = plan.isActive;
+    result.append(item);
+  }
+  return result;
+}
+
+QVariantList GymController::getMembers() const {
+  QVariantList result;
+  auto members = m_memberRepo.findAll();
+  for (const auto &member : members) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(member.id);
+    item["firstName"] = member.firstName;
+    item["lastName"] = member.lastName;
+    item["email"] = member.email.value_or("");
+    item["phone"] = member.phone.value_or("");
+    result.append(item);
+  }
+  return result;
+}
+
+QVariantList GymController::getActiveSubscriptions() const {
+  QVariantList result;
+  auto subs = m_subscriptionManager.getActive();
+  for (const auto &sub : subs) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(sub.id);
+    item["memberId"] = static_cast<int>(sub.memberId);
+    item["name"] = sub.memberName;                            // Added
+    item["plan"] = sub.planName;                              // Added
+    item["startDate"] = sub.startDate.toString("dd/MM/yyyy"); // Formatted
+    item["endDate"] = sub.endDate().toString("dd/MM/yyyy");   // Formatted
+    item["status"] = sub.statusId(); // "active", "expiring", "expired"
+    item["daysLeft"] = sub.daysUntilExpiry();
+    result.append(item);
+  }
+  return result;
+}
+
+QVariantList GymController::getExpiringSubscriptions() const {
+  QVariantList result;
+  auto subs = m_subscriptionManager.getExpiringSoon(7);
+  for (const auto &sub : subs) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(sub.id);
+    item["memberId"] = static_cast<int>(sub.memberId);
+    item["planId"] = static_cast<int>(sub.planId);
+    item["startDate"] = sub.startDate;
+    item["endDate"] = sub.endDate();
+    item["daysRemaining"] = sub.daysUntilExpiry();
+    result.append(item);
+  }
+  return result;
+}
+
+QVariantMap GymController::getFinancialSummary() const {
+  auto summary = m_financeEngine.getCurrentMonthSummary();
+  QVariantMap result;
+  result["totalIncome"] = summary.totalIncome;
+  result["totalExpenses"] = summary.totalExpenses;
+  result["balance"] = summary.balance();
+  return result;
+}
+
+QVariantList GymController::getRecentTransactions() const {
+  QVariantList result;
+  auto transactions = m_financeEngine.getLatestTransactions(10);
+  for (const auto &entry : transactions) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(entry.id);
+    item["type"] = entry.entryTypeId();
+    item["amount"] = entry.amount;
+    item["description"] = entry.description;
+    item["date"] = entry.entryDate;
+    result.append(item);
+  }
+  return result;
+}
+
+QVariantList GymController::getMonthlyBreakdown() const {
+  QVariantList result;
+  auto breakdown = m_financeEngine.getMonthlyBreakdown(6);
+  for (const auto &item : breakdown) {
+    QVariantMap entry;
+    entry["month"] = item.monthName();
+    entry["income"] = item.income;
+    entry["expense"] = item.expenses;
+    result.append(entry);
+  }
+  return result;
+}
+
+int GymController::getTotalMembers() const { return m_memberRepo.count(); }
+
+int GymController::getActiveSubscriptionsCount() const {
+  auto stats = m_subscriptionManager.getStats();
+  return stats.activeCount;
+}
+
+int GymController::getExpiringSubscriptionsCount() const {
+  auto stats = m_subscriptionManager.getStats();
+  return stats.expiringCount;
+}
+
+} // namespace GymOS::UI::Controllers

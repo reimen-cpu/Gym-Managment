@@ -1,0 +1,61 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake
+/build/
+/build_*/
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# Qt
+*.qrc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.moc
+.qmake.stash
+
+# IDE / Editor
+.vscode/
+.idea/
+*.user
+*.suo
+*.opensdf
+*.sdf
+*~
+*.swp
+.DS_Store
+
+# Logs
+*.log
+runtime-logs/
+
+# User specific
+.gemini/
+
+# Temp
+tmp/
