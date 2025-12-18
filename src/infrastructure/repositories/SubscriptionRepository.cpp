@@ -137,12 +137,16 @@ SubscriptionRepository::findExpiringSoon(int days) const {
 }
 
 int SubscriptionRepository::countActive() const {
-  // STRICT DATE LOGIC: Active if current date is between start and end date
-  // This replaces the previous reliance on the view's 'status' column which
-  // might exclude 'expiring' members
+  // Contar miembros ÚNICOS cuya suscripción MÁS RECIENTE está activa
+  // (no contar suscripciones antiguas del mismo miembro)
   QString sql = R"(
-        SELECT COUNT(*) FROM v_subscriptions_with_expiry 
-        WHERE date('now') BETWEEN start_date AND end_date
+        SELECT COUNT(DISTINCT member_id) FROM v_subscriptions_with_expiry v1
+        WHERE v1.id = (
+          SELECT v2.id FROM v_subscriptions_with_expiry v2 
+          WHERE v2.member_id = v1.member_id 
+          ORDER BY v2.id DESC LIMIT 1
+        )
+        AND date('now') BETWEEN v1.start_date AND v1.end_date
     )";
 
   QSqlQuery query = m_db.executeQuery(sql);
@@ -153,9 +157,18 @@ int SubscriptionRepository::countActive() const {
 }
 
 int SubscriptionRepository::countExpired() const {
-  QSqlQuery query =
-      m_db.executeQuery("SELECT COUNT(*) FROM v_subscriptions_with_expiry "
-                        "WHERE end_date < date('now')");
+  // Contar miembros ÚNICOS cuya suscripción MÁS RECIENTE está expirada
+  QString sql = R"(
+        SELECT COUNT(DISTINCT member_id) FROM v_subscriptions_with_expiry v1
+        WHERE v1.id = (
+          SELECT v2.id FROM v_subscriptions_with_expiry v2 
+          WHERE v2.member_id = v1.member_id 
+          ORDER BY v2.id DESC LIMIT 1
+        )
+        AND v1.end_date < date('now')
+    )";
+
+  QSqlQuery query = m_db.executeQuery(sql);
   if (query.next()) {
     return query.value(0).toInt();
   }
@@ -163,10 +176,16 @@ int SubscriptionRepository::countExpired() const {
 }
 
 int SubscriptionRepository::countExpiringSoon(int days) const {
+  // Contar miembros ÚNICOS cuya suscripción MÁS RECIENTE está por vencer
   QString sql = R"(
-        SELECT COUNT(*) FROM v_subscriptions_with_expiry 
-        WHERE end_date >= date('now') 
-          AND end_date <= date('now', '+' || ? || ' days')
+        SELECT COUNT(DISTINCT member_id) FROM v_subscriptions_with_expiry v1
+        WHERE v1.id = (
+          SELECT v2.id FROM v_subscriptions_with_expiry v2 
+          WHERE v2.member_id = v1.member_id 
+          ORDER BY v2.id DESC LIMIT 1
+        )
+        AND v1.end_date >= date('now') 
+        AND v1.end_date <= date('now', '+' || ? || ' days')
     )";
 
   QSqlQuery query = m_db.executeQuery(sql, {days});

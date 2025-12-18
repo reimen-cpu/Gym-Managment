@@ -33,6 +33,17 @@ Item {
     // Datos mensuales para el gráfico
     property var monthlyData: []
     
+    // Período seleccionado para el gráfico (en meses)
+    property int selectedPeriod: 6
+    property var periodOptions: [
+        { label: "Última semana", months: 1 },
+        { label: "Último mes", months: 1 },
+        { label: "3 meses", months: 3 },
+        { label: "6 meses", months: 6 },
+        { label: "1 año", months: 12 }
+    ]
+    property int selectedPeriodIndex: 3  // Default: 6 meses
+    
     // Historial de movimientos
     property var entries: []
     
@@ -56,7 +67,7 @@ Item {
             totalIncome = summary.totalIncome || 0
             totalExpenses = summary.totalExpenses || 0
         }
-        monthlyData = gymController.monthlyBreakdown || []
+        monthlyData = gymController.getMonthlyBreakdownForPeriod(selectedPeriod) || []
         entries = gymController.recentTransactions || []
         console.log("[QML] Loaded " + entries.length + " transactions")
     }
@@ -170,11 +181,53 @@ Item {
                     shadowVerticalOffset: Theme.shadowOffsetY
                 }
                 
-                FinanceChart {
+                ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: Theme.spacingL
-                    title: "Ingresos vs Gastos (últimos 6 meses)"
-                    monthlyData: root.monthlyData
+                    spacing: Theme.spacingM
+                    
+                    // Header con selector de período
+                    RowLayout {
+                        Layout.fillWidth: true
+                        
+                        Text {
+                            text: "Ingresos vs Gastos"
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeL
+                            font.weight: Theme.fontWeightBold
+                            color: Theme.textPrimary
+                        }
+                        
+                        Item { Layout.fillWidth: true }
+                        
+                        // Selector de período
+                        ComboBox {
+                            id: periodSelector
+                            model: root.periodOptions
+                            textRole: "label"
+                            currentIndex: root.selectedPeriodIndex
+                            
+                            implicitWidth: 140
+                            
+                            onCurrentIndexChanged: {
+                                if (currentIndex >= 0 && currentIndex < root.periodOptions.length) {
+                                    root.selectedPeriodIndex = currentIndex
+                                    root.selectedPeriod = root.periodOptions[currentIndex].months
+                                    if (typeof gymController !== 'undefined') {
+                                        root.monthlyData = gymController.getMonthlyBreakdownForPeriod(root.selectedPeriod)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Gráfico
+                    FinanceChart {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        title: ""
+                        monthlyData: root.monthlyData
+                    }
                 }
             }
             

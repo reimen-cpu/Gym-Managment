@@ -130,6 +130,12 @@ public:
    */
   Q_INVOKABLE QVariantList getMemberSubscriptionHistory(int memberId);
 
+  /**
+   * @brief Obtiene el desglose mensual para un período específico
+   * @param months Número de meses hacia atrás (ej: 1, 3, 6, 12)
+   */
+  Q_INVOKABLE QVariantList getMonthlyBreakdownForPeriod(int months);
+
   // ========================================================================
   // Getters para propiedades
   // ========================================================================

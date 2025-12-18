@@ -557,6 +557,19 @@ QVariantList GymController::getMonthlyBreakdown() const {
   return result;
 }
 
+QVariantList GymController::getMonthlyBreakdownForPeriod(int months) {
+  QVariantList result;
+  auto breakdown = m_financeEngine.getMonthlyBreakdown(months);
+  for (const auto &item : breakdown) {
+    QVariantMap entry;
+    entry["month"] = item.monthName();
+    entry["income"] = item.income;
+    entry["expense"] = item.expenses;
+    result.append(entry);
+  }
+  return result;
+}
+
 int GymController::getTotalMembers() const { return m_memberRepo.count(); }
 
 int GymController::getActiveSubscriptionsCount() const {
