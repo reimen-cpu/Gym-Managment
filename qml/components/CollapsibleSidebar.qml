@@ -29,6 +29,7 @@ Rectangle {
     // ========================================================================
     width: expanded ? Theme.sidebarExpandedWidth : Theme.sidebarCollapsedWidth
     color: Theme.surface
+    clip: true // Ensure content is clipped when collapsing
     
     // Sombra izquierda
     Rectangle {
@@ -56,32 +57,38 @@ Rectangle {
         spacing: Theme.spacingS
         
         // Botón de toggle (hamburguesa)
-        Rectangle {
-            Layout.alignment: Qt.AlignRight
-            Layout.preferredWidth: 48
-            Layout.preferredHeight: 48
-            color: toggleArea.containsMouse ? Theme.background : "transparent"
-            radius: Theme.radiusM
+        RowLayout {
+            Layout.fillWidth: true
+            layoutDirection: Qt.RightToLeft // Force RTL for the header too
             
-            Behavior on color {
-                ColorAnimation { duration: Theme.animationDurationFast }
+            Rectangle {
+                Layout.preferredWidth: 48
+                Layout.preferredHeight: 48
+                color: toggleArea.containsMouse ? Theme.background : "transparent"
+                radius: Theme.radiusM
+                
+                Behavior on color {
+                    ColorAnimation { duration: Theme.animationDurationFast }
+                }
+                
+                Image {
+                    anchors.centerIn: parent
+                    source: "qrc:/assets/icons/menu.svg"
+                    width: 24
+                    height: 24
+                    sourceSize: Qt.size(24, 24)
+                }
+                
+                MouseArea {
+                    id: toggleArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.toggleRequested()
+                }
             }
             
-            Image {
-                anchors.centerIn: parent
-                source: "qrc:/assets/icons/menu.svg"
-                width: 24
-                height: 24
-                sourceSize: Qt.size(24, 24)
-            }
-            
-            MouseArea {
-                id: toggleArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.toggleRequested()
-            }
+            Item { Layout.fillWidth: true } // Spacer to push toggle properly if needed (though RTL puts first item on right)
         }
         
         // Separador
@@ -93,6 +100,7 @@ Rectangle {
         
         // Elementos de navegación
         Repeater {
+            // ... (Model unchanged)
             model: ListModel {
                 ListElement { 
                     title: "Inicio"
@@ -144,6 +152,7 @@ Rectangle {
                     anchors.leftMargin: Theme.spacingM
                     anchors.rightMargin: Theme.spacingM
                     spacing: Theme.spacingM
+                    layoutDirection: Qt.RightToLeft // Icons on Right, Text on Left
                     
                     Image {
                         source: model.icon
@@ -156,6 +165,7 @@ Rectangle {
                     Text {
                         Layout.fillWidth: true
                         text: model.title
+                        horizontalAlignment: Text.AlignRight // Align text to the icon (Right)
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeM
                         font.weight: currentIndex === model.viewIndex ? 

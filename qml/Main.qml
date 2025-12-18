@@ -32,14 +32,16 @@ ApplicationWindow {
     // ========================================================================
     // Layout Principal
     // ========================================================================
-    RowLayout {
+    // Layout Principal - Using Item with anchors for fixed sidebar positioning
+    Item {
         anchors.fill: parent
-        spacing: 0
         
-        // Contenido Principal (a la izquierda)
+        // Main Content Area
         Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.right: sidebar.left
             color: Theme.background
             
             StackLayout {
@@ -81,10 +83,12 @@ ApplicationWindow {
             }
         }
         
-        // Sidebar (a la derecha)
+        // Sidebar (anchored to right edge)
         CollapsibleSidebar {
             id: sidebar
-            Layout.fillHeight: true
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
             expanded: sidebarExpanded
             currentIndex: currentViewIndex
             
