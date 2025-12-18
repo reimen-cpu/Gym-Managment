@@ -22,6 +22,7 @@
         <file>qml/views/PlansView.qml</file>
         <file>qml/views/SubscriptionsView.qml</file>
         <file>qml/views/FinanceView.qml</file>
+        <file>qml/views/EditMemberDialog.qml</file>
         
         <!-- Íconos -->
         <file>assets/icons/menu.svg</file>
@@ -33,5 +34,6 @@
         <file>assets/icons/add.svg</file>
         <file>assets/icons/edit.svg</file>
         <file>assets/icons/search.svg</file>
+        <file>assets/icons/lock.svg</file>
     </qresource>
 </RCC>

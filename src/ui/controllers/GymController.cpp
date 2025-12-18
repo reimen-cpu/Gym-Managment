@@ -251,6 +251,77 @@ void GymController::refreshData() {
   qDebug() << "[GymController] Data refreshed manually";
 }
 
+bool GymController::updateMember(int memberId, const QString &firstName,
+                                 const QString &lastName, const QString &email,
+                                 const QString &phone, const QString &instagram,
+                                 double weight, double height,
+                                 const QString &healthNotes,
+                                 const QString &observations) {
+  qDebug() << "[GymController] updateMember called for ID:" << memberId;
+
+  try {
+    auto existingMember = m_memberRepo.findById(memberId);
+    if (!existingMember) {
+      emit operationError("Miembro no encontrado");
+      return false;
+    }
+
+    Member member = *existingMember;
+    member.firstName = firstName;
+    member.lastName = lastName;
+
+    if (!email.isEmpty())
+      member.email = email;
+    else
+      member.email = std::nullopt;
+
+    if (!phone.isEmpty())
+      member.phone = phone;
+    else
+      member.phone = std::nullopt;
+
+    // Handle Social Media (Instagram)
+    if (!instagram.isEmpty()) {
+      QJsonObject social;
+      social["instagram"] = instagram;
+      member.socialMedia = social;
+    } else {
+      member.socialMedia = QJsonObject();
+    }
+
+    if (weight > 0)
+      member.weightKg = weight;
+    else
+      member.weightKg = std::nullopt;
+
+    if (height > 0)
+      member.heightCm = height;
+    else
+      member.heightCm = std::nullopt;
+
+    if (!healthNotes.isEmpty())
+      member.healthNotes = healthNotes;
+    else
+      member.healthNotes = std::nullopt;
+
+    if (!observations.isEmpty())
+      member.observations = observations;
+    else
+      member.observations = std::nullopt;
+
+    m_memberRepo.update(member);
+    qDebug() << "[GymController] Member updated successfully";
+
+    emit membersChanged();
+    emit operationSuccess("Perfil actualizado correctamente");
+    return true;
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Error updating member:" << e.what();
+    emit operationError(QString("Error al actualizar: %1").arg(e.what()));
+    return false;
+  }
+}
+
 QVariantMap GymController::getMemberDetails(int memberId) {
   auto member = m_memberRepo.findById(memberId);
   if (!member)
@@ -261,13 +332,15 @@ QVariantMap GymController::getMemberDetails(int memberId) {
   map["firstName"] = member->firstName;
   map["lastName"] = member->lastName;
   map["fullName"] = member->fullName();
-  map["email"] = member->email.value_or(""); // Ensure optional is handled
-  map["phone"] = member->phone.value_or(""); // Ensure optional is handled
+  map["email"] = member->email.value_or("");
+  map["phone"] = member->phone.value_or("");
+  map["instagram"] = member->socialMedia.value("instagram").toString();
+  map["weight"] = member->weightKg.value_or(0.0);
+  map["height"] = member->heightCm.value_or(0.0);
+  map["healthNotes"] = member->healthNotes.value_or("");
+  map["observations"] = member->observations.value_or("");
   map["registerDate"] = member->createdAt;
 
-  // Get current subscription info
-  // For now returning basic profile. The UI can mix this with subscription data
-  // it already has.
   return map;
 }
 

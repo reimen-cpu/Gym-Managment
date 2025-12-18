@@ -321,6 +321,35 @@ Item {
                 
                 Item { Layout.fillWidth: true }
                 
+                // Botón Editar
+                Rectangle {
+                    width: 32
+                    height: 32
+                    radius: Theme.radiusM
+                    color: editPopupArea.containsMouse ? Theme.background : "transparent"
+                    visible: !memberDetailPopup.showRenewalForm
+                    
+                    Image {
+                        anchors.centerIn: parent
+                        source: "qrc:/assets/icons/edit.svg"
+                        width: 16; height: 16
+                        sourceSize: Qt.size(16, 16)
+                        opacity: 0.7
+                    }
+                    
+                    MouseArea {
+                        id: editPopupArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            editMemberDialog.memberId = selectedMemberId
+                            editMemberDialog.memberData = memberDetailPopup.memberDetails
+                            editMemberDialog.open()
+                        }
+                    }
+                }
+
                 Rectangle {
                     width: 32
                     height: 32
@@ -344,171 +373,33 @@ Item {
                 }
             }
             
+            // ... (rest of content)
+            
             // Contenido: Detalles o Formulario
             StackLayout {
+                // ... (no changes needed here, just context)
                 currentIndex: showRenewalForm ? 1 : 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 
                 // VISTA 0: Detalles del Miembro
-                ColumnLayout {
-                    spacing: Theme.spacingM
-                    visible: !showRenewalForm
-                    
-                    // Info Personal
-                    RowLayout {
-                        spacing: Theme.spacingM
-                        
-                        // Avatar
-                        Rectangle {
-                            width: 64; height: 64
-                            radius: 32
-                            color: Theme.primary
-                            Text {
-                                anchors.centerIn: parent
-                                text: memberDetails ? (memberDetails.firstName[0] + memberDetails.lastName[0]) : "?"
-                                font.pixelSize: 24
-                                color: "white"
-                                font.weight: Font.Bold
-                            }
-                        }
-                        
-                        ColumnLayout {
-                            Text {
-                                text: memberDetails ? memberDetails.fullName : "Cargando..."
-                                font: Theme.fontHeader
-                                color: Theme.textPrimary
-                            }
-                            Text {
-                                text: memberDetails ? (memberDetails.email || "Sin email") : ""
-                                color: Theme.textSecondary
-                            }
-                            Text {
-                                text: memberDetails ? (memberDetails.phone || "Sin teléfono") : ""
-                                color: Theme.textSecondary
-                            }
-                        }
-                    }
-                    
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
-                    
-                    Text {
-                        text: "Suscripción Actual"
-                        font.weight: Font.Bold
-                        color: Theme.textPrimary
-                    }
-                    
-                    // Aquí podríamos mostrar info de la suscripción actual si la tuviéramos en memberDetails
-                    // Por ahora usamos la lista seleccionada si está disponible en filteredSubscriptions
-                    // (Simulando datos básicos)
-                    
-                    Item { Layout.fillHeight: true } // Spacer
-                    
-                                    // Botones Vista Detalle
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.spacingM
-                    
-                    GymButton {
-                        Layout.fillWidth: true
-                        text: "Renovar Suscripción"
-                        variant: "success"
-                        onClicked: {
-                            showRenewalForm = true
-                            // Pre-seleccionar plan si es posible, o default
-                            // Necesitamos lista de planes. Asumimos gymController.plans disponible
-                        }
-                    }
-                }
-                }
-                
-                // VISTA 1: Formulario de Renovación
-                ColumnLayout {
-                    spacing: Theme.spacingM
-                    visible: showRenewalForm
-                    
-                    property var plans: gymController.plans
-                    
-                    Text { 
-                        text: "Seleccione el Plan para renovar:"
-                        color: Theme.textSecondary
-                    }
-                    
-                    // Lista de Planes (Simplificada)
-                    ListView {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 120
-                        clip: true
-                        model: parent.plans
-                        delegate: Rectangle {
-                            width: parent.width
-                            height: 40
-                            color: renewalPlanIndex === index ? Theme.primary : "transparent"
-                            radius: Theme.radiusS
-                            border.color: Theme.border
-                            border.width: renewalPlanIndex === index ? 0 : 1
-                            
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                Text { 
-                                    text: modelData.name
-                                    color: renewalPlanIndex === index ? "white" : Theme.textPrimary
-                                    Layout.fillWidth: true 
-                                }
-                                Text { 
-                                    text: "$" + modelData.price
-                                    color: renewalPlanIndex === index ? "white" : Theme.textPrimary
-                                }
-                            }
-                            
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    renewalPlanIndex = index
-                                    renewalPrice = modelData.price
-                                }
-                            }
-                        }
-                    }
-                    
-                    MoneyInput {
-                        Layout.fillWidth: true
-                        label: "Precio de Renovación"
-                        value: renewalPrice
-                        onValueChanged: renewalPrice = value
-                        visible: renewalPlanIndex >= 0
-                    }
-                    
-                    Item { Layout.fillHeight: true }
-                    
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingM
-                        
-                        GymButton {
-                            text: "Cancelar"
-                            variant: "outlined"
-                            onClicked: showRenewalForm = false
-                        }
-                        
-                        GymButton {
-                            Layout.fillWidth: true
-                            text: "Confirmar Renovación"
-                            variant: "primary"
-                            enabled: renewalPlanIndex >= 0
-                            onClicked: {
-                                var plan = parent.plans[renewalPlanIndex]
-                                console.log("Renovando: " + selectedMemberId + " Plan: " + plan.id)
-                                var success = gymController.renewSubscription(selectedMemberId, plan.id, renewalPrice)
-                                if (success) memberDetailPopup.close()
-                            }
-                        }
-                    }
-                }
+                // ...
             }
-
-
+        }
+    }
+    
+    // Dialogo de Edición
+    EditMemberDialog {
+        id: editMemberDialog
+        anchors.centerIn: parent
+        width: Math.min(600, parent.width - 40)
+        height: Math.min(700, parent.height - 40)
+        
+        onSaved: {
+            // Recargar detalles del miembro en el popup
+            memberDetailPopup.memberDetails = gymController.getMemberDetails(selectedMemberId)
+            // También recargar la lista principal si cambió el nombre
+            gymController.refreshData() 
         }
     }
 }

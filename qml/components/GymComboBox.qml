@@ -72,7 +72,7 @@ Item {
             textRole: root.textRole
             valueRole: root.valueRole
             
-            onActivated: root.activated(index)
+            onActivated: (index) => root.activated(index)
             
             // Background del botón
             background: Rectangle {

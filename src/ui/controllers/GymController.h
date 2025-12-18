@@ -103,6 +103,16 @@ public:
   Q_INVOKABLE void refreshData();
 
   /**
+   * @brief Actualiza los datos de un miembro
+   */
+  Q_INVOKABLE bool updateMember(int memberId, const QString &firstName,
+                                const QString &lastName, const QString &email,
+                                const QString &phone, const QString &instagram,
+                                double weight, double height,
+                                const QString &healthNotes,
+                                const QString &observations);
+
+  /**
    * @brief Obtiene detalles completos de un miembro por ID
    */
   Q_INVOKABLE QVariantMap getMemberDetails(int memberId);

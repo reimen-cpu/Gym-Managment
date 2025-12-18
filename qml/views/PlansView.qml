@@ -463,18 +463,66 @@ Item {
                                 color: Theme.textSecondary
                             }
                             
-                            SpinBox {
+                            // Selector de Unidad y Valor
+                            RowLayout {
                                 Layout.fillWidth: true
-                                from: 1
-                                to: 3650 // 10 años
-                                value: planDays
-                                stepSize: 1
-                                editable: true
-                                onValueChanged: planDays = value
+                                spacing: Theme.spacingS
+
+                                property int durationValue: 1
+                                property string durationUnit: "months" // days, months, years
+
+                                // Logic to sync internal state with planDays
+                                Component.onCompleted: {
+                                    // Initialize from planDays
+                                    if (planDays % 365 === 0) {
+                                        durationUnit = "years"
+                                        durationValue = planDays / 365
+                                    } else if (planDays % 30 === 0) {
+                                        durationUnit = "months"
+                                        durationValue = planDays / 30
+                                    } else {
+                                        durationUnit = "days"
+                                        durationValue = planDays
+                                    }
+                                }
+
+                                onDurationValueChanged: updatePlanDays()
+                                onDurationUnitChanged: updatePlanDays()
+
+                                function updatePlanDays() {
+                                    if (durationUnit === "days") planDays = durationValue
+                                    else if (durationUnit === "months") planDays = durationValue * 30
+                                    else if (durationUnit === "years") planDays = durationValue * 365
+                                }
+
+                                SpinBox {
+                                    Layout.fillWidth: true
+                                    from: 1
+                                    to: 1000
+                                    value: parent.durationValue
+                                    onValueModified: parent.durationValue = value
+                                    editable: true
+                                }
+
+                                GymComboBox {
+                                    Layout.preferredWidth: 120
+                                    model: [
+                                        { text: "Días", value: "days" },
+                                        { text: "Meses", value: "months" },
+                                        { text: "Años", value: "years" }
+                                    ]
+                                    textRole: "text"
+                                    valueRole: "value"
+                                    currentIndex: durationUnit === "days" ? 0 : (durationUnit === "months" ? 1 : 2)
+                                    onActivated: (index) => {
+                                        var val = model[index].value
+                                        parent.durationUnit = val
+                                    }
+                                }
                             }
                             
                             Text {
-                                text: formatDuration(planDays)
+                                text: "Total: " + planDays + " días"
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeXS
                                 color: Theme.textSecondary
