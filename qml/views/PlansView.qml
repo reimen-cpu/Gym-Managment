@@ -465,6 +465,7 @@ Item {
                             
                             // Selector de Unidad y Valor
                             RowLayout {
+                                id: durationLayout
                                 Layout.fillWidth: true
                                 spacing: Theme.spacingS
 

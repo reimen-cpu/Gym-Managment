@@ -298,12 +298,14 @@ Item {
         
         // Propiedades internas del popup
         property var memberDetails: null
+        property string memberName: ""
         property bool showRenewalForm: false
         property int renewalPlanIndex: -1
         property double renewalPrice: 0
         
         onOpened: {
             memberDetails = gymController.getMemberDetails(selectedMemberId)
+            memberName = memberDetails ? (memberDetails.firstName + " " + memberDetails.lastName) : ""
             showRenewalForm = false
             renewalPlanIndex = -1
         }
@@ -473,43 +475,75 @@ Item {
                     property var plans: gymController.plans
                     
                     Text { 
-                        text: "Seleccione el Plan para renovar:"
+                        text: "Seleccione el plan de renovación para " + memberDetailPopup.memberName
                         color: Theme.textSecondary
+                        font.pixelSize: Theme.fontSizeM
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
                     }
                     
-                    // Lista de Planes (Simplificada)
-                    ListView {
+                    Rectangle {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 120
-                        clip: true
+                        height: 1
+                        color: Theme.border
+                    }
+                    
+                    // Selector de Plan con GymComboBox
+                    GymComboBox {
+                        Layout.fillWidth: true
+                        label: "Plan de Renovación"
+                        required: true
                         model: parent.plans
-                        delegate: Rectangle {
-                            width: parent.width
-                            height: 40
-                            color: memberDetailPopup.renewalPlanIndex === index ? Theme.primary : "transparent"
-                            radius: Theme.radiusS
-                            border.color: Theme.border
-                            border.width: memberDetailPopup.renewalPlanIndex === index ? 0 : 1
+                        textRole: "name"
+                        valueRole: "id"
+                        placeholder: "Seleccionar plan..."
+                        currentIndex: memberDetailPopup.renewalPlanIndex
+                        onActivated: function(index) {
+                            memberDetailPopup.renewalPlanIndex = index
+                            if (index >= 0 && parent.plans[index]) {
+                                memberDetailPopup.renewalPrice = parent.plans[index].price
+                            }
+                        }
+                    }
+                    
+                    // Mostrar detalles del plan seleccionado
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 80
+                        color: Theme.primaryLight
+                        opacity: 0.1
+                        radius: Theme.radiusM
+                        visible: memberDetailPopup.renewalPlanIndex >= 0
+                        
+                        ColumnLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingM
+                            spacing: Theme.spacingXS
                             
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                Text { 
-                                    text: modelData.name
-                                    color: memberDetailPopup.renewalPlanIndex === index ? "white" : Theme.textPrimary
-                                    Layout.fillWidth: true 
-                                }
-                                Text { 
-                                    text: "$" + modelData.price
-                                    color: memberDetailPopup.renewalPlanIndex === index ? "white" : Theme.textPrimary
-                                }
+                            Text {
+                                text: memberDetailPopup.renewalPlanIndex >= 0 && parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex] ? 
+                                      parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex].name : ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeL
+                                font.weight: Theme.fontWeightBold
+                                color: Theme.primary
                             }
                             
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: {
-                                    memberDetailPopup.renewalPlanIndex = index
-                                    memberDetailPopup.renewalPrice = modelData.price
+                            RowLayout {
+                                spacing: Theme.spacingL
+                                
+                                Text {
+                                    text: "Duración: " + (memberDetailPopup.renewalPlanIndex >= 0 && parent.parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex] ? 
+                                          parent.parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex].duration : "")
+                                    font.pixelSize: Theme.fontSizeS
+                                    color: Theme.textSecondary
+                                }
+                                
+                                Text {
+                                    text: "Precio: $" + (memberDetailPopup.renewalPrice || 0).toLocaleString()
+                                    font.pixelSize: Theme.fontSizeS
+                                    font.weight: Theme.fontWeightMedium
+                                    color: Theme.success
                                 }
                             }
                         }
@@ -517,7 +551,7 @@ Item {
                     
                     MoneyInput {
                         Layout.fillWidth: true
-                        label: "Precio de Renovación"
+                        label: "Precio de Renovación (ajustable)"
                         value: memberDetailPopup.renewalPrice
                         onValueChanged: memberDetailPopup.renewalPrice = value
                         visible: memberDetailPopup.renewalPlanIndex >= 0

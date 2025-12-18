@@ -50,11 +50,44 @@ ApplicationWindow {
                 anchors.margins: Theme.spacingL
                 currentIndex: currentViewIndex
                 
+                // Smooth transition between views
+                property int previousIndex: 0
+                
+                onCurrentIndexChanged: {
+                    // Fade transition
+                    if (currentIndex !== previousIndex) {
+                        fadeTransition.restart()
+                        previousIndex = currentIndex
+                    }
+                }
+                
+                // Subtle fade effect
+                opacity: 1.0
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                
+                NumberAnimation {
+                    id: fadeTransition
+                    target: viewStack
+                    property: "opacity"
+                    from: 0.95
+                    to: 1.0
+                    duration: 150
+                    easing.type: Easing.OutQuad
+                }
+                
                 // Vista 0: Dashboard (Home)
                 DashboardView {
                     id: dashboardView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                     onNavigationRequested: function(viewName, filterParam) {
                         if (viewName === "subscriptions") {
+                            console.log("[Main.qml] Navigation requested to subscriptions with filter:", filterParam)
                             currentViewIndex = 3
                             subscriptionsView.setFilter(filterParam)
                         }
@@ -64,21 +97,29 @@ ApplicationWindow {
                 // Vista 1: Nuevos Suscriptores
                 NewSubscriberView {
                     id: newSubscriberView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
                 
                 // Vista 2: Planes de Pago
                 PlansView {
                     id: plansView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
                 
                 // Vista 3: Suscripciones Activas
                 SubscriptionsView {
                     id: subscriptionsView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
                 
                 // Vista 4: Finanzas
                 FinanceView {
                     id: financeView
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
                 }
             }
         }
@@ -93,12 +134,44 @@ ApplicationWindow {
             currentIndex: currentViewIndex
             
             onNavigationRequested: function(index) {
+                console.log("[Main.qml] Sidebar navigation requested, changing from", currentViewIndex, "to", index)
                 currentViewIndex = index
+                // Force immediate visual update
+                viewStack.currentIndex = index
+                // Trigger repaint timer for Wine compatibility
+                repaintTimer.restart()
             }
             
             onToggleRequested: {
                 sidebarExpanded = !sidebarExpanded
             }
+        }
+    }
+    
+    // Monitor currentViewIndex changes and force repaint
+    onCurrentViewIndexChanged: {
+        console.log("[Main.qml] currentViewIndex property changed to:", currentViewIndex)
+        // Use gentle repaint for Wine compatibility
+        Qt.callLater(forceRepaint)
+    }
+    
+    // Gentle repaint function - smoother for Wine
+    function forceRepaint() {
+        // Only use requestUpdate - smoothest method
+        mainWindow.requestUpdate()
+        
+        // Backup: Trigger timer for delayed update if needed
+        repaintTimer.restart()
+    }
+    
+    // Delayed repaint timer - ensures update completes
+    Timer {
+        id: repaintTimer
+        interval: 50 // Reduced from 100ms for faster response
+        running: false
+        repeat: false
+        onTriggered: {
+            mainWindow.requestUpdate()
         }
     }
     

@@ -135,8 +135,8 @@ Item {
                     border.width: 1
                     border.color: Theme.border
                     
-                    // Sombra
-                    layer.enabled: true
+                    // Sombra (disabled in performance mode)
+                    layer.enabled: Theme.enableShadows
                     layer.effect: MultiEffect {
                         shadowEnabled: true
                         shadowColor: Qt.rgba(0, 0, 0, 0.15)

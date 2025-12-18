@@ -18,6 +18,11 @@ Rectangle {
     property bool expanded: true
     property int currentIndex: 0
     
+    // Monitor currentIndex changes
+    onCurrentIndexChanged: {
+        console.log("[CollapsibleSidebar] currentIndex changed to:", currentIndex)
+    }
+    
     // ========================================================================
     // Señales
     // ========================================================================
@@ -187,7 +192,10 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.navigationRequested(model.viewIndex)
+                    onClicked: {
+                        console.log("[CollapsibleSidebar] Navigation item clicked, viewIndex:", model.viewIndex, "title:", model.title)
+                        root.navigationRequested(model.viewIndex)
+                    }
                 }
                 
                 // Indicador de selección

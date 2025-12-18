@@ -117,6 +117,10 @@ QtObject {
     // ========================================================================
     // Sombras
     // ========================================================================
+    // Performance Mode - Set to true on low-end PCs to disable shadows
+    readonly property bool performanceMode: false
+    readonly property bool enableShadows: !performanceMode
+    
     readonly property real shadowOpacity: 0.1
     readonly property int shadowBlur: 6
     readonly property int shadowOffsetY: 2

@@ -31,8 +31,8 @@ Rectangle {
     color: Theme.surface
     radius: Theme.radiusL
     
-    // Sombra
-    layer.enabled: true
+    // Sombra (disabled in performance mode)
+    layer.enabled: Theme.enableShadows
     layer.effect: MultiEffect {
         shadowEnabled: true
         shadowColor: Qt.rgba(0, 0, 0, Theme.shadowOpacity)
