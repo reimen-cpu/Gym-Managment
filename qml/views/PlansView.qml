@@ -449,7 +449,7 @@ Item {
                     
                     Item {
                         Layout.fillWidth: true
-                        implicitHeight: 70
+                        implicitHeight: 100
                         
                         ColumnLayout {
                             anchors.fill: parent
@@ -534,19 +534,11 @@ Item {
                     
                     Item {
                         Layout.fillWidth: true
-                        implicitHeight: 70
+                        implicitHeight: 90
                         
                         ColumnLayout {
                             anchors.fill: parent
                             spacing: Theme.spacingXS
-                            
-                            Text {
-                                text: "Precio *"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeS
-                                font.weight: Theme.fontWeightMedium
-                                color: Theme.textSecondary
-                            }
                             
                             MoneyInput {
                                 Layout.fillWidth: true
