@@ -104,14 +104,14 @@ Item {
             }
         }
         
-        // Lista de Próximos a Vencer
+                // Lista de Próximos a Vencer
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
             color: Theme.surface
             radius: Theme.radiusL
             
-            layer.enabled: true
+            layer.enabled: Theme.enableShadows
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 shadowColor: Qt.rgba(0, 0, 0, Theme.shadowOpacity)
@@ -145,8 +145,6 @@ Item {
                         color: Theme.textSecondary
                     }
                 }
-                
-                // Separador
                 Rectangle {
                     Layout.fillWidth: true
                     height: 1
@@ -162,6 +160,11 @@ Item {
                     spacing: Theme.spacingS
                     
                     model: expiringList
+                    
+                    add: Transition {
+                        NumberAnimation { property: "opacity"; from: 0; to: 1.0; duration: 200 }
+                        NumberAnimation { property: "y"; from: 20; duration: 200 }
+                    }
                     
                     delegate: MemberListItem {
                         width: expiringListView.width

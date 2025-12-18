@@ -347,28 +347,91 @@ QVariantMap GymController::getMemberDetails(int memberId) {
 bool GymController::renewSubscription(int memberId, int planId,
                                       double priceOverride) {
   qDebug() << "[GymController] Renewing subscription for member" << memberId
-           << "Plan" << planId;
+           << "Plan" << planId << "Price:" << priceOverride;
 
-  // Note: SubscriptionManager::renewSubscription currently calculates start
-  // date automatically based on existing sub. Providing startDate as current
-  // date or 'tomorrow' if it handles the overlap logic. The manager logic: if
-  // current sub active, starts after end date. If expired, starts today. We
-  // pass QDate() (invalid) to let manager decide, or QDate::currentDate()?
-  // Manager signature: renewSubscription(memberId, planId, startDate)
-  // We will pass current date, and let manager logic extend if needed.
+  try {
+    int64_t newSubId = m_subscriptionManager.renewSubscription(
+        memberId, planId, QDate(), priceOverride);
 
-  int64_t newSubId = m_subscriptionManager.renewSubscription(
-      memberId, planId, QDate::currentDate());
+    qDebug() << "[GymController] renewSubscription returned:" << newSubId;
 
-  if (newSubId != -1) {
-    emit subscriptionsChanged();
-    emit financialDataChanged();
-    emit operationSuccess("Suscripción renovada exitosamente");
-    return true;
-  } else {
-    emit operationError("Falló la renovación de la suscripción");
+    if (newSubId != -1) {
+      qDebug() << "[GymController] Subscription renewed successfully!";
+      emit subscriptionsChanged();
+      emit financialDataChanged();
+      emit operationSuccess("Suscripción renovada exitosamente");
+      return true;
+    } else {
+      qWarning() << "[GymController] renewSubscription returned -1 (failure)";
+      emit operationError("Falló la renovación de la suscripción");
+      return false;
+    }
+  } catch (const std::exception &e) {
+    qWarning() << "[GymController] Exception in renewSubscription:" << e.what();
+    emit operationError(QString("Error: %1").arg(e.what()));
     return false;
   }
+}
+
+QVariantList GymController::getMemberSubscriptionHistory(int memberId) {
+  qDebug() << "[GymController] getMemberSubscriptionHistory called for member:"
+           << memberId;
+  QVariantList result;
+
+  // Necesitamos acceso al repositorio de suscripciones
+  // El SubscriptionManager no expone findByMember directamente, así que usamos
+  // el repo
+  auto &db = GymOS::Infrastructure::Database::DatabaseManager::instance();
+
+  QVariantList params;
+  params << memberId;
+
+  QSqlQuery query = db.executeQuery(
+      "SELECT s.id, s.member_id, s.plan_id, s.start_date, s.enrollment_fee, "
+      "s.plan_duration_days, COALESCE(s.plan_duration_days, p.duration_days) "
+      "as duration_days, "
+      "p.name as plan_name, p.price as plan_price, "
+      "date(s.start_date, '+' || COALESCE(s.plan_duration_days, "
+      "p.duration_days) || ' days') as end_date "
+      "FROM subscriptions s "
+      "LEFT JOIN plans p ON s.plan_id = p.id "
+      "WHERE s.member_id = ? "
+      "ORDER BY s.start_date DESC",
+      params);
+
+  qDebug() << "[GymController] Query executed, checking results...";
+
+  while (query.next()) {
+    QVariantMap item;
+    item["id"] = query.value("id").toInt();
+    item["planId"] = query.value("plan_id").toInt();
+    item["planName"] = query.value("plan_name").toString();
+    item["startDate"] =
+        query.value("start_date").toDate().toString("dd/MM/yyyy");
+    item["endDate"] = query.value("end_date").toDate().toString("dd/MM/yyyy");
+    item["price"] = query.value("plan_price").toDouble();
+    item["enrollmentFee"] = query.value("enrollment_fee").toDouble();
+
+    // Calcular el estado basado en la fecha
+    QDate endDate = query.value("end_date").toDate();
+    QDate today = QDate::currentDate();
+    int daysLeft = today.daysTo(endDate);
+
+    QString status;
+    if (daysLeft < 0) {
+      status = "expired";
+    } else if (daysLeft <= 7) {
+      status = "expiring";
+    } else {
+      status = "active";
+    }
+    item["status"] = status;
+    item["daysLeft"] = daysLeft;
+
+    result.append(item);
+  }
+
+  return result;
 }
 
 QVariantList GymController::getPlans() const {

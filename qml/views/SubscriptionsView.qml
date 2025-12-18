@@ -302,9 +302,15 @@ Item {
         property bool showRenewalForm: false
         property int renewalPlanIndex: -1
         property double renewalPrice: 0
+        property int currentMemberId: -1
+        property var subscriptionHistory: []
         
         onOpened: {
-            memberDetails = gymController.getMemberDetails(selectedMemberId)
+            currentMemberId = selectedMemberId
+            console.log("[QML] Popup opened for member:", currentMemberId)
+            memberDetails = gymController.getMemberDetails(currentMemberId)
+            subscriptionHistory = gymController.getMemberSubscriptionHistory(currentMemberId)
+            console.log("[QML] History loaded:", subscriptionHistory.length, "items")
             memberName = memberDetails ? (memberDetails.firstName + " " + memberDetails.lastName) : ""
             showRenewalForm = false
             renewalPlanIndex = -1
@@ -430,19 +436,104 @@ Item {
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
                     
                     Text {
-                        text: "Suscripción Actual"
+                        text: "Historial de Suscripciones"
                         font.weight: Font.Bold
                         color: Theme.textPrimary
                     }
                     
-                    // Helper text since we don't have sub details in memberDetails yet
-                    Text {
-                         text: "Ver detalles en la lista principal."
-                         color: Theme.textSecondary
-                         font.italic: true
+                    // Lista de historial de suscripciones
+                    ListView {
+                        id: subscriptionHistoryList
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.minimumHeight: 150
+                        clip: true
+                        spacing: Theme.spacingS
+                        
+                        model: memberDetailPopup.subscriptionHistory
+                        
+                        delegate: Rectangle {
+                            width: subscriptionHistoryList.width
+                            height: 60
+                            radius: Theme.radiusM
+                            color: Theme.surfaceVariant
+                            border.width: modelData.status === "active" ? 2 : 0
+                            border.color: Theme.success
+                            
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingS
+                                spacing: Theme.spacingM
+                                
+                                // Indicador de estado
+                                Rectangle {
+                                    width: 4
+                                    Layout.fillHeight: true
+                                    radius: 2
+                                    color: modelData.status === "active" ? Theme.success : 
+                                           modelData.status === "expiring" ? Theme.warning : Theme.error
+                                }
+                                
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+                                    
+                                    Text {
+                                        text: modelData.planName || "Plan"
+                                        font.weight: Font.Medium
+                                        color: Theme.textPrimary
+                                    }
+                                    Text {
+                                        text: modelData.startDate + " → " + modelData.endDate
+                                        font.pixelSize: Theme.fontSizeS
+                                        color: Theme.textSecondary
+                                    }
+                                }
+                                
+                                // Badge de estado
+                                Rectangle {
+                                    Layout.preferredWidth: statusLabel.width + 16
+                                    Layout.preferredHeight: 24
+                                    radius: 12
+                                    color: Qt.rgba(
+                                        (modelData.status === "active" ? Theme.success : 
+                                         modelData.status === "expiring" ? Theme.warning : Theme.error).r,
+                                        (modelData.status === "active" ? Theme.success : 
+                                         modelData.status === "expiring" ? Theme.warning : Theme.error).g,
+                                        (modelData.status === "active" ? Theme.success : 
+                                         modelData.status === "expiring" ? Theme.warning : Theme.error).b,
+                                        0.15
+                                    )
+                                    
+                                    Text {
+                                        id: statusLabel
+                                        anchors.centerIn: parent
+                                        text: modelData.status === "active" ? "Activo" : 
+                                              modelData.status === "expiring" ? "Por Vencer" : "Vencido"
+                                        font.pixelSize: Theme.fontSizeXS
+                                        color: modelData.status === "active" ? Theme.success : 
+                                               modelData.status === "expiring" ? Theme.warning : Theme.error
+                                    }
+                                }
+                                
+                                // Precio
+                                Text {
+                                    text: "$" + (modelData.price || 0).toLocaleString()
+                                    font.weight: Font.Bold
+                                    color: Theme.textPrimary
+                                }
+                            }
+                        }
+                        
+                        // Mensaje cuando no hay historial
+                        Text {
+                            anchors.centerIn: parent
+                            text: "No hay historial de suscripciones"
+                            color: Theme.textSecondary
+                            visible: subscriptionHistoryList.count === 0
+                        }
                     }
                     
-                    Item { Layout.fillHeight: true } // Spacer
                     
                     // Botones Vista Detalle
                     RowLayout {
@@ -469,6 +560,7 @@ Item {
                 
                 // VISTA 1: Formulario de Renovación
                 ColumnLayout {
+                    id: renewalForm
                     spacing: Theme.spacingM
                     visible: memberDetailPopup.showRenewalForm
                     
@@ -510,9 +602,11 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 80
-                        color: Theme.primaryLight
-                        opacity: 0.1
+                        // Usar Qt.rgba para el fondo en lugar de opacity global (que afectaría texto)
+                        color: Qt.rgba(Theme.primary.r, Theme.primary.g, Theme.primary.b, 0.1)
                         radius: Theme.radiusM
+                        border.width: 1
+                        border.color: Theme.primary
                         visible: memberDetailPopup.renewalPlanIndex >= 0
                         
                         ColumnLayout {
@@ -521,8 +615,8 @@ Item {
                             spacing: Theme.spacingXS
                             
                             Text {
-                                text: memberDetailPopup.renewalPlanIndex >= 0 && parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex] ? 
-                                      parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex].name : ""
+                                text: memberDetailPopup.renewalPlanIndex >= 0 && renewalForm.plans[memberDetailPopup.renewalPlanIndex] ? 
+                                      renewalForm.plans[memberDetailPopup.renewalPlanIndex].name : ""
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeL
                                 font.weight: Theme.fontWeightBold
@@ -533,16 +627,17 @@ Item {
                                 spacing: Theme.spacingL
                                 
                                 Text {
-                                    text: "Duración: " + (memberDetailPopup.renewalPlanIndex >= 0 && parent.parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex] ? 
-                                          parent.parent.parent.parent.plans[memberDetailPopup.renewalPlanIndex].duration : "")
+                                    text: "Duración: " + (memberDetailPopup.renewalPlanIndex >= 0 && renewalForm.plans[memberDetailPopup.renewalPlanIndex] ? 
+                                          renewalForm.plans[memberDetailPopup.renewalPlanIndex].duration : "")
                                     font.pixelSize: Theme.fontSizeS
-                                    color: Theme.textSecondary
+                                    font.weight: Font.Medium
+                                    color: Theme.textPrimary
                                 }
                                 
                                 Text {
                                     text: "Precio: $" + (memberDetailPopup.renewalPrice || 0).toLocaleString()
                                     font.pixelSize: Theme.fontSizeS
-                                    font.weight: Theme.fontWeightMedium
+                                    font.weight: Theme.fontWeightBold
                                     color: Theme.success
                                 }
                             }
@@ -575,7 +670,7 @@ Item {
                             variant: "primary"
                             enabled: memberDetailPopup.renewalPlanIndex >= 0
                             onClicked: {
-                                var plan = parent.plans[memberDetailPopup.renewalPlanIndex]
+                                var plan = renewalForm.plans[memberDetailPopup.renewalPlanIndex]
                                 console.log("Renovando: " + selectedMemberId + " Plan: " + plan.id)
                                 var success = gymController.renewSubscription(selectedMemberId, plan.id, memberDetailPopup.renewalPrice)
                                 if (success) memberDetailPopup.close()

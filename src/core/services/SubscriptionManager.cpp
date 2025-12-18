@@ -54,21 +54,24 @@ int64_t SubscriptionManager::createSubscription(int64_t memberId,
 }
 
 int64_t SubscriptionManager::renewSubscription(int64_t memberId, int64_t planId,
-                                               const QDate &startDate) {
+                                               const QDate &startDate,
+                                               double priceOverride) {
+  qDebug() << "[SubscriptionManager] renewSubscription called for member:"
+           << memberId;
+
   // Obtener la suscripción actual
   auto currentSub = m_subscriptionRepo.findLatestByMember(memberId);
 
-  // Determinar fecha de inicio
-  QDate newStartDate = startDate;
-  if (!newStartDate.isValid()) {
-    if (currentSub && currentSub->endDate() > QDate::currentDate()) {
-      // Si la suscripción actual aún no venció, iniciar desde su fin
-      newStartDate = currentSub->endDate();
-    } else {
-      // Si ya venció o no tiene, iniciar hoy
-      newStartDate = QDate::currentDate();
-    }
+  // Calcular días restantes de la suscripción actual (si todavía está activa)
+  int remainingDays = 0;
+  if (currentSub && currentSub->endDate() > QDate::currentDate()) {
+    remainingDays = QDate::currentDate().daysTo(currentSub->endDate());
+    qDebug() << "[SubscriptionManager] Current subscription has"
+             << remainingDays << "days remaining";
   }
+
+  // La nueva suscripción SIEMPRE empieza HOY (o en la fecha especificada)
+  QDate newStartDate = startDate.isValid() ? startDate : QDate::currentDate();
 
   // Verificar que el plan existe
   auto plan = m_planRepo.findById(planId);
@@ -77,25 +80,38 @@ int64_t SubscriptionManager::renewSubscription(int64_t memberId, int64_t planId,
     return -1;
   }
 
+  // ACUMULAR: nueva duración = días del plan + días restantes de la suscripción
+  // actual
+  int totalDurationDays = plan->durationDays + remainingDays;
+
+  qDebug() << "[SubscriptionManager] Day accumulation:" << plan->durationDays
+           << "(plan) +" << remainingDays
+           << "(remaining) =" << totalDurationDays << "days";
+  qDebug() << "[SubscriptionManager] New subscription: Start:"
+           << newStartDate.toString("dd/MM/yyyy") << "End:"
+           << newStartDate.addDays(totalDurationDays).toString("dd/MM/yyyy");
+
   auto &db = DatabaseManager::instance();
   db.beginTransaction();
 
   try {
-    // Crear nueva suscripción (sin cuota de inscripción en renovación)
+    // Crear nueva suscripción con duración acumulada
     Subscription subscription;
     subscription.memberId = memberId;
     subscription.planId = planId;
     subscription.startDate = newStartDate;
     subscription.enrollmentFee = 0;
-    subscription.planDurationDays = plan->durationDays;
+    subscription.planDurationDays = totalDurationDays; // ← Duración ACUMULADA
 
     int64_t subscriptionId = m_subscriptionRepo.insert(subscription);
 
     // Registrar el ingreso
+    double finalPrice = (priceOverride >= 0) ? priceOverride : plan->price;
+
     auto member = m_memberRepo.findById(memberId);
     FinanceEngine financeEngine;
     financeEngine.recordRenewalIncome(
-        plan->price,
+        finalPrice,
         (member ? member->fullName() : "Miembro") + " - Renovación " +
             plan->name,
         newStartDate);
@@ -112,11 +128,35 @@ int64_t SubscriptionManager::renewSubscription(int64_t memberId, int64_t planId,
 }
 
 std::vector<Subscription> SubscriptionManager::getExpiringSoon(int days) {
-  return m_subscriptionRepo.findExpiringSoon(days);
+  auto expiring = m_subscriptionRepo.findExpiringSoon(days);
+  std::vector<Subscription> filtered;
+
+  for (const auto &sub : expiring) {
+    auto latest = m_subscriptionRepo.findLatestByMember(sub.memberId);
+    // Si existe una suscripción posterior (ej: renovada), ignoramos la que
+    // vence
+    if (latest && latest->endDate() > sub.endDate()) {
+      continue;
+    }
+    filtered.push_back(sub);
+  }
+  return filtered;
 }
 
 std::vector<Subscription> SubscriptionManager::getExpired() {
-  return m_subscriptionRepo.findByStatus(SubscriptionStatus::Expired);
+  auto expired = m_subscriptionRepo.findByStatus(SubscriptionStatus::Expired);
+  std::vector<Subscription> filtered;
+
+  for (const auto &sub : expired) {
+    auto latest = m_subscriptionRepo.findLatestByMember(sub.memberId);
+    // Si el miembro tiene una suscripción más reciente (activa o futura),
+    // ignoramos la expirada
+    if (latest && latest->endDate() > sub.endDate()) {
+      continue;
+    }
+    filtered.push_back(sub);
+  }
+  return filtered;
 }
 
 std::vector<Subscription> SubscriptionManager::getActive() {
@@ -124,7 +164,21 @@ std::vector<Subscription> SubscriptionManager::getActive() {
 }
 
 std::vector<Subscription> SubscriptionManager::getAll() {
-  return m_subscriptionRepo.findAll();
+  auto all = m_subscriptionRepo.findAll();
+  std::vector<Subscription> filtered;
+
+  for (const auto &sub : all) {
+    // Para cada suscripción, verificar si es la más reciente del miembro
+    auto latest = m_subscriptionRepo.findLatestByMember(sub.memberId);
+
+    if (latest && latest->id != sub.id) {
+      // Esta no es la suscripción más reciente del miembro, ocultarla
+      continue;
+    }
+
+    filtered.push_back(sub);
+  }
+  return filtered;
 }
 
 SubscriptionManager::Stats SubscriptionManager::getStats() {

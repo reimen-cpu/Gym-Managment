@@ -125,6 +125,11 @@ public:
   Q_INVOKABLE bool renewSubscription(int memberId, int planId,
                                      double priceOverride = 0);
 
+  /**
+   * @brief Obtiene el historial de suscripciones de un miembro
+   */
+  Q_INVOKABLE QVariantList getMemberSubscriptionHistory(int memberId);
+
   // ========================================================================
   // Getters para propiedades
   // ========================================================================

@@ -114,30 +114,31 @@ Rectangle {
     // ========================================================================
     // Animación de Hover
     // ========================================================================
+    // ========================================================================
+    // Animación de Hover
+    // ========================================================================
     signal clicked()
+
+    // Borde (invisible por defecto, visible en hover)
+    border.width: 1
+    border.color: hoverArea.containsMouse ? Theme.primary : "transparent"
+    
+    // Escala (ligeramente más grande en hover)
+    scale: hoverArea.containsMouse ? 1.02 : 1.0
+    
+    // Transiciones suaves
+    Behavior on scale {
+        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+    }
+    Behavior on border.color {
+        ColorAnimation { duration: 150 }
+    }
 
     MouseArea {
         id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        
         onClicked: root.clicked()
-
-        onEntered: {
-            hoverAnimation.to = Qt.rgba(Theme.background.r, Theme.background.g, Theme.background.b, 1)
-            hoverAnimation.start()
-        }
-        onExited: {
-            hoverAnimation.to = Theme.surface
-            hoverAnimation.start()
-        }
-    }
-    
-    ColorAnimation {
-        id: hoverAnimation
-        target: root
-        property: "color"
-        duration: Theme.animationDurationFast
     }
 }

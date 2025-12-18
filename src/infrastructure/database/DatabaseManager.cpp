@@ -150,6 +150,7 @@ bool DatabaseManager::createTables() {
             member_id INTEGER NOT NULL,
             plan_id INTEGER NOT NULL,
             start_date TEXT NOT NULL,
+            plan_duration_days INTEGER,
             enrollment_fee REAL NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE RESTRICT,
@@ -189,6 +190,8 @@ bool DatabaseManager::createTables() {
     )";
 
   // Vista de suscripciones con fecha de vencimiento calculada
+  // COALESCE usa la duración personalizada de la suscripción si existe,
+  // sino usa la duración del plan original
   QString createSubscriptionsView = R"(
         CREATE VIEW IF NOT EXISTS v_subscriptions_with_expiry AS
         SELECT 
@@ -196,18 +199,19 @@ bool DatabaseManager::createTables() {
             s.member_id,
             s.plan_id,
             s.start_date,
-            date(s.start_date, '+' || p.duration_days || ' days') AS end_date,
+            s.plan_duration_days,
+            date(s.start_date, '+' || COALESCE(s.plan_duration_days, p.duration_days) || ' days') AS end_date,
             s.enrollment_fee,
             m.first_name || ' ' || m.last_name AS member_name,
             p.name AS plan_name,
-            p.duration_days,
+            COALESCE(s.plan_duration_days, p.duration_days) AS duration_days,
             p.price AS plan_price,
             CASE 
-                WHEN date(s.start_date, '+' || p.duration_days || ' days') < date('now') THEN 'expired'
-                WHEN date(s.start_date, '+' || p.duration_days || ' days') <= date('now', '+7 days') THEN 'expiring'
+                WHEN date(s.start_date, '+' || COALESCE(s.plan_duration_days, p.duration_days) || ' days') < date('now') THEN 'expired'
+                WHEN date(s.start_date, '+' || COALESCE(s.plan_duration_days, p.duration_days) || ' days') <= date('now', '+7 days') THEN 'expiring'
                 ELSE 'active'
             END AS status,
-            CAST(julianday(date(s.start_date, '+' || p.duration_days || ' days')) - julianday(date('now')) AS INTEGER) AS days_until_expiry
+            CAST(julianday(date(s.start_date, '+' || COALESCE(s.plan_duration_days, p.duration_days) || ' days')) - julianday(date('now')) AS INTEGER) AS days_until_expiry
         FROM subscriptions s
         JOIN plans p ON s.plan_id = p.id
         JOIN members m ON s.member_id = m.id

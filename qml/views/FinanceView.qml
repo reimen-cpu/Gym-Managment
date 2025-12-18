@@ -26,9 +26,9 @@ Item {
     property date newEntryDate: new Date()
     
     // Resumen financiero (vinculado al controller)
-    property double totalIncome: typeof gymController !== 'undefined' ? gymController.financialSummary.totalIncome : 0
-    property double totalExpenses: typeof gymController !== 'undefined' ? gymController.financialSummary.totalExpenses : 0
-    readonly property double balance: typeof gymController !== 'undefined' ? gymController.financialSummary.balance : 0
+    property double totalIncome: 0
+    property double totalExpenses: 0
+    readonly property double balance: totalIncome - totalExpenses
     
     // Datos mensuales para el gráfico
     property var monthlyData: []
@@ -51,10 +51,13 @@ Item {
     
     function refreshData() {
         console.log("[QML] Refreshing financial data...")
-        totalIncome = gymController.financialSummary.totalIncome
-        totalExpenses = gymController.financialSummary.totalExpenses
-        monthlyData = gymController.monthlyBreakdown
-        entries = gymController.recentTransactions
+        var summary = gymController.financialSummary
+        if (summary) {
+            totalIncome = summary.totalIncome || 0
+            totalExpenses = summary.totalExpenses || 0
+        }
+        monthlyData = gymController.monthlyBreakdown || []
+        entries = gymController.recentTransactions || []
         console.log("[QML] Loaded " + entries.length + " transactions")
     }
     
@@ -219,7 +222,7 @@ Item {
                         clip: true
                         spacing: Theme.spacingXS
                         
-                        model: entries
+                        model: root.entries
                         
                         delegate: Rectangle {
                             width: entriesListView.width

@@ -8,14 +8,14 @@ SubscriptionRepository::SubscriptionRepository()
 
 int64_t SubscriptionRepository::insert(const Subscription &subscription) {
   QString sql = R"(
-        INSERT INTO subscriptions (member_id, plan_id, start_date, enrollment_fee)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO subscriptions (member_id, plan_id, start_date, plan_duration_days, enrollment_fee)
+        VALUES (?, ?, ?, ?, ?)
     )";
 
-  QSqlQuery query =
-      m_db.executeQuery(sql, {subscription.memberId, subscription.planId,
-                              subscription.startDate.toString(Qt::ISODate),
-                              subscription.enrollmentFee});
+  QSqlQuery query = m_db.executeQuery(
+      sql, {subscription.memberId, subscription.planId,
+            subscription.startDate.toString(Qt::ISODate),
+            subscription.planDurationDays, subscription.enrollmentFee});
 
   return query.lastInsertId().toLongLong();
 }
@@ -57,9 +57,12 @@ SubscriptionRepository::findByMember(int64_t memberId) const {
 
 std::optional<Subscription>
 SubscriptionRepository::findLatestByMember(int64_t memberId) const {
+  // Ordenar por ID DESC para obtener la suscripción más recientemente CREADA
+  // (no por start_date, porque múltiples suscripciones pueden tener la misma
+  // fecha de inicio)
   QSqlQuery query =
       m_db.executeQuery("SELECT * FROM v_subscriptions_with_expiry WHERE "
-                        "member_id = ? ORDER BY start_date DESC LIMIT 1",
+                        "member_id = ? ORDER BY id DESC LIMIT 1",
                         {memberId});
 
   if (query.next()) {

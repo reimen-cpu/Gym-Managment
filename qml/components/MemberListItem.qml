@@ -32,11 +32,16 @@ Rectangle {
     // ========================================================================
     implicitHeight: 72
     
-    color: mouseArea.containsMouse ? Theme.background : Theme.surface
+    color: mouseArea.containsMouse ? Theme.surfaceVariant : Theme.surface
     radius: Theme.radiusM
+    scale: mouseArea.containsMouse ? 1.01 : 1.0
     
     Behavior on color {
-        ColorAnimation { duration: Theme.animationDurationFast }
+        ColorAnimation { duration: 150 }
+    }
+    
+    Behavior on scale {
+        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
     }
     
     // ========================================================================

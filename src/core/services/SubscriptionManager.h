@@ -49,7 +49,8 @@ public:
    * @return ID de la nueva suscripción
    */
   int64_t renewSubscription(int64_t memberId, int64_t planId,
-                            const QDate &startDate = QDate());
+                            const QDate &startDate = QDate(),
+                            double priceOverride = -1.0);
 
   /**
    * @brief Obtiene suscripciones que vencen pronto
