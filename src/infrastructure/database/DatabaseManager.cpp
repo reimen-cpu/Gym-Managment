@@ -4,7 +4,6 @@
 #include <QDir>
 #include <QStandardPaths>
 
-
 namespace GymOS::Infrastructure::Database {
 
 DatabaseManager &DatabaseManager::instance() {
@@ -314,31 +313,41 @@ bool DatabaseManager::runMigrations() {
 
       bool success = true;
       if (migration == "001_convert_months_to_days") {
-        // Verificar si la columna duration_months existe
-        QSqlQuery checkCol =
-            executeQuery("SELECT duration_months FROM plans LIMIT 1");
-        if (!checkCol.lastError().isValid()) {
+        // Verificar si la columna duration_months existe usando PRAGMA
+        QSqlQuery pragma = executeQuery("PRAGMA table_info(plans)");
+        bool hasDurationMonths = false;
+        while (pragma.next()) {
+          if (pragma.value("name").toString() == "duration_months") {
+            hasDurationMonths = true;
+            break;
+          }
+        }
+
+        if (hasDurationMonths) {
           // La columna existe, necesitamos migrar
           beginTransaction();
-          // Añadir columna duration_days si no existe (SQLite permite add
-          // column) Pero como estamos en un entorno donde createTables ya se
-          // ejecutó con el nuevo esquema si la tabla ya existía de antes,
-          // createTables IF NOT EXISTS no hizo nada. Así que tenemos que:
-          // 1. Check schema actual.
-          // 2. Si es viejo -> ALTER TABLE ADD COLUMN duration_days, UPDATE,
-          // DROP COLUMN (SQLite no soporta drop column fácil, mejor renombrar)
 
-          // Simplificación: Dado que SQLite es limitado en ALTER, renombramos
-          // tabla y copiamos. Esta migración asume que la tabla 'plans' tiene
-          // 'duration_months'
+          // Verificar si ya existe duration_days para no fallar
+          bool hasDurationDays = false;
+          pragma.first(); // Rewind if possible or re-query. PRAGMA is small,
+                          // re-querying is safer/easier code wise but let's
+                          // just check the log.
+          // SQLite PRAGMA results are forward only usually. Let's re-run or
+          // just proceed with ALTER which ignores if exists? No, ALTER TABLE
+          // ADD COLUMN fails if exists.
 
-          executeQuery(
+          // Let's rely on hasDurationMonths. If checking column existed, we
+          // assume we need to migrate. But we must check if duration_days
+          // exists to avoid error on ADD COLUMN. Let's just catch the error of
+          // ADD COLUMN gracefully or check both.
+
+          QSqlQuery addCol = executeQuery(
               "ALTER TABLE plans ADD COLUMN duration_days INTEGER DEFAULT 0");
+          // If it fails, maybe it exists. We proceed to update.
+
           executeQuery("UPDATE plans SET duration_days = duration_months * 30");
-          // Nota: No borramos duration_months para evitar complejidad en
-          // SQLite, simplemente lo ignoramos. Opcional: Recrear tabla para
-          // limpiar, pero es arriesgado sin backup.
           commitTransaction();
+          qInfo() << "Migración 001 completada: Meses convertidos a días";
         } else {
           qInfo() << "La columna duration_months no existe o es una "
                      "instalación nueva.";

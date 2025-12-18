@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     gymController->createPlan("Trimestral", 3, 12000);
     gymController->createPlan("Semestral", 6, 20000);
     gymController->createPlan("Anual", 12, 35000);
-    gymController->createPlan("Quincenal", 0, 3000); // 15 días
+    gymController->createPlan("Quincenal", 15, 3000); // 15 días
     logInfo("Default plans inserted");
   }
 

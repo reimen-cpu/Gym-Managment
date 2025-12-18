@@ -32,7 +32,7 @@ install_manifest.txt
 compile_commands.json
 
 # Qt
-*.qrc
+# *.qrc - Keep this commented or remove to allow source qrc files
 moc_*.cpp
 qrc_*.cpp
 ui_*.h

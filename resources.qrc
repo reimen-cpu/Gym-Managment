@@ -1,0 +1,37 @@
+<RCC>
+    <qresource prefix="/">
+        <!-- QML Principal -->
+        <file>qml/Main.qml</file>
+        <file>qml/Theme.qml</file>
+        <file>qml/qmldir</file>
+        
+        <!-- Componentes -->
+        <file>qml/components/CollapsibleSidebar.qml</file>
+        <file>qml/components/StatCard.qml</file>
+        <file>qml/components/GymButton.qml</file>
+        <file>qml/components/GymTextField.qml</file>
+        <file>qml/components/GymComboBox.qml</file>
+        <file>qml/components/MemberListItem.qml</file>
+        <file>qml/components/FinanceChart.qml</file>
+        <file>qml/components/GymTextArea.qml</file>
+        <file>qml/components/MoneyInput.qml</file>
+        
+        <!-- Vistas -->
+        <file>qml/views/DashboardView.qml</file>
+        <file>qml/views/NewSubscriberView.qml</file>
+        <file>qml/views/PlansView.qml</file>
+        <file>qml/views/SubscriptionsView.qml</file>
+        <file>qml/views/FinanceView.qml</file>
+        
+        <!-- Íconos -->
+        <file>assets/icons/menu.svg</file>
+        <file>assets/icons/dashboard.svg</file>
+        <file>assets/icons/members.svg</file>
+        <file>assets/icons/plans.svg</file>
+        <file>assets/icons/subscriptions.svg</file>
+        <file>assets/icons/finance.svg</file>
+        <file>assets/icons/add.svg</file>
+        <file>assets/icons/edit.svg</file>
+        <file>assets/icons/search.svg</file>
+    </qresource>
+</RCC>
