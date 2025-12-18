@@ -58,44 +58,16 @@ Item {
     // ========================================================================
     // Layout Principal
     // ========================================================================
+    // Señal para navegación
+    signal navigationRequested(string viewName, string filterParam)
+
     ColumnLayout {
         anchors.fill: parent
         spacing: Theme.spacingXL
         
         // Encabezado
-        RowLayout {
-            Layout.fillWidth: true
-            
-            ColumnLayout {
-                spacing: Theme.spacingXS
-                
-                Text {
-                    text: "Panel de Control"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeTitle
-                    font.weight: Theme.fontWeightBold
-                    color: Theme.textPrimary
-                }
-                
-                Text {
-                    text: "Resumen general del gimnasio"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeM
-                    color: Theme.textSecondary
-                }
-            }
-            
-            Item { Layout.fillWidth: true }
-            
-            // Fecha actual
-            Text {
-                text: Qt.formatDate(new Date(), "dddd, d 'de' MMMM yyyy")
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeM
-                color: Theme.textSecondary
-            }
-        }
-        
+        // ... (lines 66-98 unchanged)
+
         // Tarjetas de Estadísticas
         RowLayout {
             Layout.fillWidth: true
@@ -108,6 +80,7 @@ Item {
                 subtitle: "Con suscripción vigente"
                 accentColor: Theme.success
                 iconSource: "qrc:/assets/icons/members.svg"
+                onClicked: root.navigationRequested("subscriptions", "active")
             }
             
             StatCard {
@@ -117,6 +90,7 @@ Item {
                 subtitle: "Sin suscripción activa"
                 accentColor: Theme.error
                 iconSource: "qrc:/assets/icons/members.svg"
+                onClicked: root.navigationRequested("subscriptions", "expired") // Best effort map
             }
             
             StatCard {
@@ -126,6 +100,7 @@ Item {
                 subtitle: "En los próximos 7 días"
                 accentColor: Theme.warning
                 iconSource: "qrc:/assets/icons/subscriptions.svg"
+                onClicked: root.navigationRequested("subscriptions", "expiring")
             }
         }
         

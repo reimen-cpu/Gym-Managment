@@ -30,6 +30,8 @@ class GymController : public QObject {
   Q_PROPERTY(QVariantList members READ getMembers NOTIFY membersChanged)
   Q_PROPERTY(QVariantList activeSubscriptions READ getActiveSubscriptions NOTIFY
                  subscriptionsChanged)
+  Q_PROPERTY(QVariantList allSubscriptions READ getAllSubscriptions NOTIFY
+                 subscriptionsChanged)
   Q_PROPERTY(QVariantList expiringSubscriptions READ getExpiringSubscriptions
                  NOTIFY subscriptionsChanged)
   Q_PROPERTY(QVariantMap financialSummary READ getFinancialSummary NOTIFY
@@ -130,6 +132,7 @@ public:
   QVariantList getPlans() const;
   QVariantList getMembers() const;
   QVariantList getActiveSubscriptions() const;
+  QVariantList getAllSubscriptions() const;
   QVariantList getExpiringSubscriptions() const;
   QVariantMap getFinancialSummary() const;
   QVariantList getRecentTransactions() const;

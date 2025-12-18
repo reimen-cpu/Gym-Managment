@@ -420,6 +420,24 @@ QVariantList GymController::getActiveSubscriptions() const {
   return result;
 }
 
+QVariantList GymController::getAllSubscriptions() const {
+  QVariantList result;
+  auto subs = m_subscriptionManager.getAll();
+  for (const auto &sub : subs) {
+    QVariantMap item;
+    item["id"] = static_cast<int>(sub.id);
+    item["memberId"] = static_cast<int>(sub.memberId);
+    item["name"] = sub.memberName;
+    item["plan"] = sub.planName;
+    item["startDate"] = sub.startDate.toString("dd/MM/yyyy");
+    item["endDate"] = sub.endDate().toString("dd/MM/yyyy");
+    item["status"] = sub.statusId(); // "active", "expiring", "expired"
+    item["daysLeft"] = sub.daysUntilExpiry();
+    result.append(item);
+  }
+  return result;
+}
+
 QVariantList GymController::getExpiringSubscriptions() const {
   QVariantList result;
   auto subs = m_subscriptionManager.getExpiringSoon(7);
@@ -427,10 +445,13 @@ QVariantList GymController::getExpiringSubscriptions() const {
     QVariantMap item;
     item["id"] = static_cast<int>(sub.id);
     item["memberId"] = static_cast<int>(sub.memberId);
-    item["planId"] = static_cast<int>(sub.planId);
-    item["startDate"] = sub.startDate;
-    item["endDate"] = sub.endDate();
-    item["daysRemaining"] = sub.daysUntilExpiry();
+    item["name"] = sub.memberName; // Added
+    item["plan"] = sub.planName;   // Added
+    item["startDate"] =
+        sub.startDate.toString("dd/MM/yyyy");               // Formatted string
+    item["endDate"] = sub.endDate().toString("dd/MM/yyyy"); // Formatted string
+    item["status"] = "expiring";              // Explicit status for UI style
+    item["daysLeft"] = sub.daysUntilExpiry(); // Renamed from daysRemaining
     result.append(item);
   }
   return result;

@@ -490,9 +490,9 @@ Item {
                                 onDurationUnitChanged: updatePlanDays()
 
                                 function updatePlanDays() {
-                                    if (durationUnit === "days") planDays = durationValue
-                                    else if (durationUnit === "months") planDays = durationValue * 30
-                                    else if (durationUnit === "years") planDays = durationValue * 365
+                                    if (durationLayout.durationUnit === "days") planDays = durationValue
+                                    else if (durationLayout.durationUnit === "months") planDays = durationValue * 30
+                                    else if (durationLayout.durationUnit === "years") planDays = durationValue * 365
                                 }
 
                                 SpinBox {
@@ -513,10 +513,10 @@ Item {
                                     ]
                                     textRole: "text"
                                     valueRole: "value"
-                                    currentIndex: durationUnit === "days" ? 0 : (durationUnit === "months" ? 1 : 2)
+                                    currentIndex: durationLayout.durationUnit === "days" ? 0 : (durationLayout.durationUnit === "months" ? 1 : 2)
                                     onActivated: (index) => {
                                         var val = model[index].value
-                                        parent.durationUnit = val
+                                        durationLayout.durationUnit = val
                                     }
                                 }
                             }

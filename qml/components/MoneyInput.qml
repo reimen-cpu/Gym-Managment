@@ -34,8 +34,8 @@ GymTextField {
         if (isNaN(numVal)) numVal = 0
         value = numVal
         
-        // 3. Formatear con puntos (locale de-DE usa puntos para miles)
-        var formatted = numVal > 0 ? numVal.toLocaleString("de-DE") : ""
+        // 3. Formatear con puntos (Regex manual para asegurar comportamiento consistente)
+        var formatted = cleanText.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
         
         // 4. Actualizar texto visual
         _updating = true
@@ -54,7 +54,7 @@ GymTextField {
         // Solo actualizar texto si el valor difiere del actual visualmente
         if (value !== currentNum) {
             _updating = true
-            text = value > 0 ? value.toLocaleString("de-DE") : ""
+            text = value > 0 ? value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ""
             _updating = false
         }
     }

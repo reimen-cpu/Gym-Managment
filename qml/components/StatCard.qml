@@ -114,11 +114,16 @@ Rectangle {
     // ========================================================================
     // Animación de Hover
     // ========================================================================
+    signal clicked()
+
     MouseArea {
         id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
         
+        onClicked: root.clicked()
+
         onEntered: {
             hoverAnimation.to = Qt.rgba(Theme.background.r, Theme.background.g, Theme.background.b, 1)
             hoverAnimation.start()

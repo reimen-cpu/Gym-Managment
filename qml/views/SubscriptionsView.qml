@@ -22,19 +22,23 @@ Item {
     
     // Lista de suscripciones (será cargada desde el controller)
     // Lista de suscripciones (vinculada al controller)
-    property var subscriptions: typeof gymController !== 'undefined' ? gymController.activeSubscriptions : []
+    property var subscriptions: typeof gymController !== 'undefined' ? gymController.allSubscriptions : []
     
     Connections {
         target: typeof gymController !== 'undefined' ? gymController : null
         function onSubscriptionsChanged() {
-            root.subscriptions = gymController.activeSubscriptions
+            root.subscriptions = gymController.allSubscriptions
         }
     }
     
     Component.onCompleted: {
         if (typeof gymController !== 'undefined') {
-            root.subscriptions = gymController.activeSubscriptions
+            root.subscriptions = gymController.allSubscriptions
         }
+    }
+
+    function setFilter(filter) {
+        statusFilter = filter
     }
     
     // Suscripciones filtradas
@@ -312,7 +316,7 @@ Item {
                 Layout.fillWidth: true
                 
                 Text {
-                    text: showRenewalForm ? "Renovar Suscripción" : "Detalle de Suscripción"
+                    text: memberDetailPopup.showRenewalForm ? "Renovar Suscripción" : "Detalle de Suscripción"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeL
                     font.weight: Theme.fontWeightBold
@@ -377,13 +381,174 @@ Item {
             
             // Contenido: Detalles o Formulario
             StackLayout {
-                // ... (no changes needed here, just context)
-                currentIndex: showRenewalForm ? 1 : 0
+                currentIndex: memberDetailPopup.showRenewalForm ? 1 : 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 
                 // VISTA 0: Detalles del Miembro
-                // ...
+                ColumnLayout {
+                    spacing: Theme.spacingM
+                    visible: !memberDetailPopup.showRenewalForm
+                    
+                    // Info Personal
+                    RowLayout {
+                        spacing: Theme.spacingM
+                        
+                        // Avatar
+                        Rectangle {
+                            width: 64; height: 64
+                            radius: 32
+                            color: Theme.primary
+                            Text {
+                                anchors.centerIn: parent
+                                text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.firstName ? (memberDetailPopup.memberDetails.firstName[0] + (memberDetailPopup.memberDetails.lastName ? memberDetailPopup.memberDetails.lastName[0] : "")) : "?"
+                                font.pixelSize: 24
+                                color: "white"
+                                font.weight: Font.Bold
+                            }
+                        }
+                        
+                        ColumnLayout {
+                            Text {
+                                text: memberDetailPopup.memberDetails ? memberDetailPopup.memberDetails.fullName : "Cargando..."
+                                font: Theme.fontHeader
+                                color: Theme.textPrimary
+                            }
+                            Text {
+                                text: memberDetailPopup.memberDetails ? (memberDetailPopup.memberDetails.email || "Sin email") : ""
+                                color: Theme.textSecondary
+                            }
+                            Text {
+                                text: memberDetailPopup.memberDetails ? (memberDetailPopup.memberDetails.phone || "Sin teléfono") : ""
+                                color: Theme.textSecondary
+                            }
+                        }
+                    }
+                    
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+                    
+                    Text {
+                        text: "Suscripción Actual"
+                        font.weight: Font.Bold
+                        color: Theme.textPrimary
+                    }
+                    
+                    // Helper text since we don't have sub details in memberDetails yet
+                    Text {
+                         text: "Ver detalles en la lista principal."
+                         color: Theme.textSecondary
+                         font.italic: true
+                    }
+                    
+                    Item { Layout.fillHeight: true } // Spacer
+                    
+                    // Botones Vista Detalle
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingM
+                        
+                        GymButton {
+                            Layout.fillWidth: true
+                            text: "Renovar Suscripción"
+                            variant: "success"
+                            onClicked: {
+                                memberDetailPopup.showRenewalForm = true
+                            }
+                        }
+                        
+                        GymButton {
+                            Layout.fillWidth: true
+                            text: "Cerrar"
+                            variant: "outline"
+                            onClicked: memberDetailPopup.close()
+                        }
+                    }
+                }
+                
+                // VISTA 1: Formulario de Renovación
+                ColumnLayout {
+                    spacing: Theme.spacingM
+                    visible: memberDetailPopup.showRenewalForm
+                    
+                    property var plans: gymController.plans
+                    
+                    Text { 
+                        text: "Seleccione el Plan para renovar:"
+                        color: Theme.textSecondary
+                    }
+                    
+                    // Lista de Planes (Simplificada)
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 120
+                        clip: true
+                        model: parent.plans
+                        delegate: Rectangle {
+                            width: parent.width
+                            height: 40
+                            color: memberDetailPopup.renewalPlanIndex === index ? Theme.primary : "transparent"
+                            radius: Theme.radiusS
+                            border.color: Theme.border
+                            border.width: memberDetailPopup.renewalPlanIndex === index ? 0 : 1
+                            
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: 10
+                                Text { 
+                                    text: modelData.name
+                                    color: memberDetailPopup.renewalPlanIndex === index ? "white" : Theme.textPrimary
+                                    Layout.fillWidth: true 
+                                }
+                                Text { 
+                                    text: "$" + modelData.price
+                                    color: memberDetailPopup.renewalPlanIndex === index ? "white" : Theme.textPrimary
+                                }
+                            }
+                            
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    memberDetailPopup.renewalPlanIndex = index
+                                    memberDetailPopup.renewalPrice = modelData.price
+                                }
+                            }
+                        }
+                    }
+                    
+                    MoneyInput {
+                        Layout.fillWidth: true
+                        label: "Precio de Renovación"
+                        value: memberDetailPopup.renewalPrice
+                        onValueChanged: memberDetailPopup.renewalPrice = value
+                        visible: memberDetailPopup.renewalPlanIndex >= 0
+                    }
+                    
+                    Item { Layout.fillHeight: true }
+                    
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingM
+                        
+                        GymButton {
+                            text: "Cancelar"
+                            variant: "outlined"
+                            onClicked: memberDetailPopup.showRenewalForm = false
+                        }
+                        
+                        GymButton {
+                            Layout.fillWidth: true
+                            text: "Confirmar Renovación"
+                            variant: "primary"
+                            enabled: memberDetailPopup.renewalPlanIndex >= 0
+                            onClicked: {
+                                var plan = parent.plans[memberDetailPopup.renewalPlanIndex]
+                                console.log("Renovando: " + selectedMemberId + " Plan: " + plan.id)
+                                var success = gymController.renewSubscription(selectedMemberId, plan.id, memberDetailPopup.renewalPrice)
+                                if (success) memberDetailPopup.close()
+                            }
+                        }
+                    }
+                }
             }
         }
     }

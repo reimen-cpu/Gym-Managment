@@ -123,6 +123,10 @@ std::vector<Subscription> SubscriptionManager::getActive() {
   return m_subscriptionRepo.findByStatus(SubscriptionStatus::Active);
 }
 
+std::vector<Subscription> SubscriptionManager::getAll() {
+  return m_subscriptionRepo.findAll();
+}
+
 SubscriptionManager::Stats SubscriptionManager::getStats() {
   Stats stats;
   stats.activeCount = m_subscriptionRepo.countActive();

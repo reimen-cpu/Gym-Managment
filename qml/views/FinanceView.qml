@@ -428,13 +428,9 @@ Item {
                         color: Theme.textSecondary
                     }
                     
-                    SpinBox {
+                    MoneyInput {
                         Layout.fillWidth: true
-                        from: 1
-                        to: 9999999
                         value: newEntryAmount
-                        stepSize: 100
-                        editable: true
                         onValueChanged: newEntryAmount = value
                     }
                 }
@@ -467,9 +463,8 @@ Item {
     // Funciones Helper
     // ========================================================================
     function formatCurrency(amount) {
-        // Use 'de-DE' locale to force dots for thousands and commas for decimals (e.g. 1.234.567)
-        // This is a common requirement in some Spanish speaking regions or personal preference.
-        return "$" + Number(amount).toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+        // Manual regex to force dots for thousands. 1000 -> 1.000
+        return "$" + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
     }
 
     function isIncome(type) {

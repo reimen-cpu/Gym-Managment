@@ -51,6 +51,12 @@ ApplicationWindow {
                 // Vista 0: Dashboard (Home)
                 DashboardView {
                     id: dashboardView
+                    onNavigationRequested: function(viewName, filterParam) {
+                        if (viewName === "subscriptions") {
+                            currentViewIndex = 3
+                            subscriptionsView.setFilter(filterParam)
+                        }
+                    }
                 }
                 
                 // Vista 1: Nuevos Suscriptores

@@ -10,7 +10,6 @@
 #include <QObject>
 #include <memory>
 
-
 namespace GymOS::Core::Services {
 
 using namespace GymOS::Core::Models;
@@ -66,6 +65,11 @@ public:
    * @brief Obtiene suscripciones activas
    */
   std::vector<Subscription> getActive();
+
+  /**
+   * @brief Obtiene TODAS las suscripciones (historial completo)
+   */
+  std::vector<Subscription> getAll();
 
   /**
    * @brief Obtiene estadísticas de suscripciones
