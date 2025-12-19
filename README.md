@@ -33,7 +33,7 @@
     </td>
     <td align="center">
       <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214734.png?raw=true" width="400" alt="Gráficos"/>
-      <br><sub><b>Gráficos</b></sub>
+      <br><sub><b>Gestion De Perfiles</b></sub>
     </td>
   </tr>
   <tr>
