@@ -335,8 +335,9 @@ Item {
                                         color: editMouseArea.containsMouse ? Theme.background : "transparent"
                                         
                                         Image {
+                                            id: planEditIcon
                                             anchors.centerIn: parent
-                                            source: "qrc:/assets/icons/edit.svg"
+                                            source: Theme.getIcon("edit")
                                             width: 18
                                             height: 18
                                             sourceSize: Qt.size(18, 18)

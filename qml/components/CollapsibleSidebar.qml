@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Effects
 import ".."
 
 /**
@@ -77,8 +78,9 @@ Rectangle {
                 }
                 
                 Image {
+                    id: menuIcon
                     anchors.centerIn: parent
-                    source: "qrc:/assets/icons/menu.svg"
+                    source: Theme.getIcon("menu")
                     width: 24
                     height: 24
                     sourceSize: Qt.size(24, 24)
@@ -109,27 +111,27 @@ Rectangle {
             model: ListModel {
                 ListElement { 
                     title: "Inicio"
-                    icon: "qrc:/assets/icons/dashboard.svg"
+                    iconName: "dashboard"
                     viewIndex: 0
                 }
                 ListElement { 
                     title: "Nuevo Suscriptor"
-                    icon: "qrc:/assets/icons/members.svg"
+                    iconName: "members"
                     viewIndex: 1
                 }
                 ListElement { 
                     title: "Planes de Pago"
-                    icon: "qrc:/assets/icons/plans.svg"
+                    iconName: "plans"
                     viewIndex: 2
                 }
                 ListElement { 
                     title: "Suscripciones"
-                    icon: "qrc:/assets/icons/subscriptions.svg"
+                    iconName: "subscriptions"
                     viewIndex: 3
                 }
                 ListElement { 
                     title: "Finanzas"
-                    icon: "qrc:/assets/icons/finance.svg"
+                    iconName: "finance"
                     viewIndex: 4
                 }
             }
@@ -160,7 +162,8 @@ Rectangle {
                     layoutDirection: Qt.RightToLeft // Icons on Right, Text on Left
                     
                     Image {
-                        source: model.icon
+                        id: navIcon
+                        source: Theme.getIcon(model.iconName)
                         width: 24
                         height: 24
                         sourceSize: Qt.size(24, 24)
@@ -214,6 +217,77 @@ Rectangle {
         // Espaciador
         Item {
             Layout.fillHeight: true
+        }
+        
+        // Toggle de Modo Oscuro
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 40
+            color: darkModeArea.containsMouse ? Theme.background : "transparent"
+            radius: Theme.radiusM
+            
+            // Cargar valor persistido al iniciar
+            Component.onCompleted: {
+                if (typeof gymController !== 'undefined') {
+                    Theme.darkMode = gymController.darkMode
+                }
+            }
+            
+            // Sincronizar cambios desde gymController
+            Connections {
+                target: typeof gymController !== 'undefined' ? gymController : null
+                function onDarkModeChanged() {
+                    Theme.darkMode = gymController.darkMode
+                }
+            }
+            
+            Behavior on color {
+                ColorAnimation { duration: Theme.animationDurationFast }
+            }
+            
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: Theme.spacingS
+                anchors.rightMargin: Theme.spacingS
+                layoutDirection: Qt.RightToLeft
+                spacing: Theme.spacingS
+                
+                // Icono sol/luna
+                Text {
+                    text: Theme.darkMode ? "☀️" : "🌙"
+                    font.pixelSize: 20
+                }
+                
+                // Texto (solo visible cuando expandido)
+                Text {
+                    Layout.fillWidth: true
+                    text: Theme.darkMode ? "Modo Claro" : "Modo Oscuro"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeS
+                    color: Theme.textSecondary
+                    visible: root.expanded
+                    opacity: root.expanded ? 1 : 0
+                    
+                    Behavior on opacity {
+                        NumberAnimation { duration: Theme.animationDurationNormal }
+                    }
+                }
+            }
+            
+            MouseArea {
+                id: darkModeArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    // Toggle y persistir
+                    var newValue = !Theme.darkMode
+                    Theme.darkMode = newValue
+                    if (typeof gymController !== 'undefined') {
+                        gymController.darkMode = newValue
+                    }
+                }
+            }
         }
         
         // Información de versión (al fondo)

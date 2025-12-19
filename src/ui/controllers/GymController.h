@@ -47,6 +47,8 @@ class GymController : public QObject {
                  NOTIFY subscriptionsChanged)
   Q_PROPERTY(double enrollmentFee READ getEnrollmentFee WRITE setEnrollmentFee
                  NOTIFY settingsChanged)
+  Q_PROPERTY(
+      bool darkMode READ getDarkMode WRITE setDarkMode NOTIFY darkModeChanged)
 
 public:
   explicit GymController(QObject *parent = nullptr);
@@ -152,6 +154,8 @@ public:
   int getActiveSubscriptionsCount() const;
   int getExpiringSubscriptionsCount() const;
   double getEnrollmentFee() const;
+  bool getDarkMode() const;
+  void setDarkMode(bool dark);
 
 signals:
   void plansChanged();
@@ -159,6 +163,7 @@ signals:
   void subscriptionsChanged();
   void financialDataChanged();
   void settingsChanged();
+  void darkModeChanged();
   void operationSuccess(const QString &message);
   void operationError(const QString &message);
 

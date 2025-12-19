@@ -9,39 +9,48 @@ import QtQuick 2.15
  */
 QtObject {
     // ========================================================================
-    // Colores Principales
+    // Dark Mode Toggle
+    // ========================================================================
+    property bool darkMode: false
+    
+    // ========================================================================
+    // Colores Principales (Responsivos al tema)
     // ========================================================================
     
     // Fondos
-    readonly property color background: "#f5f5f5"        // Fondo principal (gris claro)
-    readonly property color surface: "#ffffff"           // Paneles y contenedores
-    readonly property color surfaceVariant: "#fafafa"    // Variante de superficie
+    readonly property color background: darkMode ? "#121212" : "#f5f5f5"
+    readonly property color surface: darkMode ? "#1e1e1e" : "#ffffff"
+    readonly property color surfaceVariant: darkMode ? "#2a2a2a" : "#fafafa"
     
     // Texto
-    readonly property color textPrimary: "#212121"       // Texto principal
-    readonly property color textSecondary: "#757575"     // Texto secundario / etiquetas
-    readonly property color textDisabled: "#9e9e9e"      // Texto deshabilitado
-    readonly property color textOnPrimary: "#ffffff"     // Texto sobre color primario
+    readonly property color textPrimary: darkMode ? "#e0e0e0" : "#212121"
+    readonly property color textSecondary: darkMode ? "#a0a0a0" : "#757575"
+    readonly property color textDisabled: darkMode ? "#616161" : "#9e9e9e"
+    readonly property color textOnPrimary: "#ffffff"
     
-    // Acentos
-    readonly property color primary: "#2979ff"           // Azul fuerte - botones principales
-    readonly property color primaryDark: "#1565c0"       // Azul oscuro - hover
-    readonly property color primaryLight: "#82b1ff"      // Azul claro
-    readonly property color success: "#00c853"           // Verde - confirmaciones
-    readonly property color successDark: "#00a844"       // Verde oscuro - hover
-    readonly property color error: "#d50000"             // Rojo - errores / alertas
-    readonly property color errorLight: "#ff5252"        // Rojo claro
-    readonly property color warning: "#ff9800"           // Naranja - advertencias
-    readonly property color warningLight: "#ffb74d"      // Naranja claro
+    // Colores de acento (ligeramente más vibrantes en modo oscuro)
+    readonly property color primary: darkMode ? "#448aff" : "#2979ff"
+    readonly property color primaryDark: darkMode ? "#2979ff" : "#1565c0"
+    readonly property color primaryLight: darkMode ? "#82b1ff" : "#82b1ff"
+    readonly property color success: darkMode ? "#69f0ae" : "#00c853"
+    readonly property color successDark: darkMode ? "#00c853" : "#00a844"
+    readonly property color error: darkMode ? "#ff5252" : "#d50000"
+    readonly property color errorLight: darkMode ? "#ff8a80" : "#ff5252"
+    readonly property color warning: darkMode ? "#ffb74d" : "#ff9800"
+    readonly property color warningLight: darkMode ? "#ffd54f" : "#ffb74d"
     
     // Estados de suscripción
-    readonly property color statusActive: "#00c853"      // Activo
-    readonly property color statusExpiring: "#ff9800"    // Por vencer
-    readonly property color statusExpired: "#d50000"     // Vencido
+    readonly property color statusActive: darkMode ? "#69f0ae" : "#00c853"
+    readonly property color statusExpiring: darkMode ? "#ffb74d" : "#ff9800"
+    readonly property color statusExpired: darkMode ? "#ff5252" : "#d50000"
     
     // Bordes
-    readonly property color border: "#e0e0e0"            // Borde normal
-    readonly property color borderFocus: "#2979ff"       // Borde con foco
+    readonly property color border: darkMode ? "#424242" : "#e0e0e0"
+    readonly property color borderFocus: darkMode ? "#448aff" : "#2979ff"
+    
+    // Iconos
+    readonly property color iconColor: darkMode ? "#e0e0e0" : "#212121"
+    readonly property color iconColorSecondary: darkMode ? "#a0a0a0" : "#757575"
     
     // ========================================================================
     // Tipografía
@@ -158,5 +167,14 @@ QtObject {
             case "expired": return "Vencido";
             default: return "Desconocido";
         }
+    }
+    
+    /**
+     * Devuelve la ruta del ícono según el tema actual
+     * @param iconName - nombre del ícono sin extensión (ej: "menu", "dashboard")
+     */
+    function getIcon(iconName) {
+        var folder = darkMode ? "icons-light" : "icons"
+        return "qrc:/assets/" + folder + "/" + iconName + ".svg"
     }
 }

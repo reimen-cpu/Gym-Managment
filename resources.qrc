@@ -35,5 +35,17 @@
         <file>assets/icons/edit.svg</file>
         <file>assets/icons/search.svg</file>
         <file>assets/icons/lock.svg</file>
+        
+        <!-- Íconos Light (para modo oscuro) -->
+        <file>assets/icons-light/menu.svg</file>
+        <file>assets/icons-light/dashboard.svg</file>
+        <file>assets/icons-light/members.svg</file>
+        <file>assets/icons-light/plans.svg</file>
+        <file>assets/icons-light/subscriptions.svg</file>
+        <file>assets/icons-light/finance.svg</file>
+        <file>assets/icons-light/add.svg</file>
+        <file>assets/icons-light/edit.svg</file>
+        <file>assets/icons-light/search.svg</file>
+        <file>assets/icons-light/lock.svg</file>
     </qresource>
 </RCC>

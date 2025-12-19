@@ -1,5 +1,6 @@
 #include "GymController.h"
 #include <QDebug>
+#include <QSettings>
 
 namespace GymOS::UI::Controllers {
 
@@ -580,6 +581,19 @@ int GymController::getActiveSubscriptionsCount() const {
 int GymController::getExpiringSubscriptionsCount() const {
   auto stats = m_subscriptionManager.getStats();
   return stats.expiringCount;
+}
+
+bool GymController::getDarkMode() const {
+  QSettings settings;
+  return settings.value("theme/darkMode", false).toBool();
+}
+
+void GymController::setDarkMode(bool dark) {
+  QSettings settings;
+  if (settings.value("theme/darkMode", false).toBool() != dark) {
+    settings.setValue("theme/darkMode", dark);
+    emit darkModeChanged();
+  }
 }
 
 } // namespace GymOS::UI::Controllers

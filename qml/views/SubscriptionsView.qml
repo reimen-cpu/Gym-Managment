@@ -124,7 +124,8 @@ Item {
                         spacing: Theme.spacingS
                         
                         Image {
-                            source: "qrc:/assets/icons/search.svg"
+                            id: searchIcon
+                            source: Theme.getIcon("search")
                             width: 20
                             height: 20
                             sourceSize: Qt.size(20, 20)
@@ -278,7 +279,7 @@ Item {
         id: memberDetailPopup
         anchors.centerIn: parent
         width: 500
-        height: 400
+        height: Math.min(550, parent.height - 40)  // Altura dinámica con máximo
         modal: true
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -342,8 +343,9 @@ Item {
                     visible: !memberDetailPopup.showRenewalForm
                     
                     Image {
+                        id: editIcon
                         anchors.centerIn: parent
-                        source: "qrc:/assets/icons/edit.svg"
+                        source: Theme.getIcon("edit")
                         width: 16; height: 16
                         sourceSize: Qt.size(16, 16)
                         opacity: 0.7
@@ -392,14 +394,19 @@ Item {
                 currentIndex: memberDetailPopup.showRenewalForm ? 1 : 0
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                clip: true
                 
                 // VISTA 0: Detalles del Miembro
                 ColumnLayout {
+                    id: detailsColumn
                     spacing: Theme.spacingM
                     visible: !memberDetailPopup.showRenewalForm
                     
-                    // Info Personal
+                    // Info Personal - Header con flecha
+                    property bool profileExpanded: false
+                    
                     RowLayout {
+                        Layout.fillWidth: true
                         spacing: Theme.spacingM
                         
                         // Avatar
@@ -417,6 +424,8 @@ Item {
                         }
                         
                         ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 2
                             Text {
                                 text: memberDetailPopup.memberDetails ? memberDetailPopup.memberDetails.fullName : "Cargando..."
                                 font: Theme.fontHeader
@@ -430,6 +439,114 @@ Item {
                                 text: memberDetailPopup.memberDetails ? (memberDetailPopup.memberDetails.phone || "Sin teléfono") : ""
                                 color: Theme.textSecondary
                             }
+                        }
+                        
+                        // Flecha para expandir/colapsar
+                        Rectangle {
+                            width: 32; height: 32
+                            radius: Theme.radiusM
+                            color: profileArrowArea.containsMouse ? Theme.background : "transparent"
+                            
+                            Text {
+                                anchors.centerIn: parent
+                                text: detailsColumn.profileExpanded ? "▲" : "▼"
+                                font.pixelSize: 12
+                                color: Theme.textSecondary
+                            }
+                            
+                            MouseArea {
+                                id: profileArrowArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: detailsColumn.profileExpanded = !detailsColumn.profileExpanded
+                            }
+                        }
+                    }
+                    
+                    // Detalles expandidos del perfil (aparece/desaparece con el layout)
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 2
+                        columnSpacing: Theme.spacingL
+                        rowSpacing: Theme.spacingS
+                        visible: detailsColumn.profileExpanded
+                        Layout.preferredHeight: detailsColumn.profileExpanded ? implicitHeight : 0
+                        
+                        // Peso
+                        Text {
+                            text: "Peso:"
+                            font.pixelSize: Theme.fontSizeS
+                            font.weight: Font.Medium
+                            color: Theme.textSecondary
+                        }
+                        Text {
+                            text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.weight > 0 ? 
+                                  memberDetailPopup.memberDetails.weight + " kg" : "No registrado"
+                            font.pixelSize: Theme.fontSizeS
+                            color: Theme.textPrimary
+                        }
+                        
+                        // Altura
+                        Text {
+                            text: "Altura:"
+                            font.pixelSize: Theme.fontSizeS
+                            font.weight: Font.Medium
+                            color: Theme.textSecondary
+                        }
+                        Text {
+                            text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.height > 0 ? 
+                                  memberDetailPopup.memberDetails.height + " cm" : "No registrado"
+                            font.pixelSize: Theme.fontSizeS
+                            color: Theme.textPrimary
+                        }
+                        
+                        // Instagram
+                        Text {
+                            text: "Instagram:"
+                            font.pixelSize: Theme.fontSizeS
+                            font.weight: Font.Medium
+                            color: Theme.textSecondary
+                        }
+                        Text {
+                            text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.instagram ? 
+                                  "@" + memberDetailPopup.memberDetails.instagram : "No registrado"
+                            font.pixelSize: Theme.fontSizeS
+                            color: Theme.textPrimary
+                        }
+                        
+                        // Notas de salud
+                        Text {
+                            text: "Notas de salud:"
+                            font.pixelSize: Theme.fontSizeS
+                            font.weight: Font.Medium
+                            color: Theme.textSecondary
+                            Layout.alignment: Qt.AlignTop
+                        }
+                        Text {
+                            text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.healthNotes ? 
+                                  memberDetailPopup.memberDetails.healthNotes : "Sin notas"
+                            font.pixelSize: Theme.fontSizeS
+                            color: Theme.textPrimary
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
+                        }
+                        
+                        // Observaciones
+                        Text {
+                            text: "Observaciones:"
+                            font.pixelSize: Theme.fontSizeS
+                            font.weight: Font.Medium
+                            color: Theme.textSecondary
+                            Layout.alignment: Qt.AlignTop
+                        }
+                        Text {
+                            text: memberDetailPopup.memberDetails && memberDetailPopup.memberDetails.observations ? 
+                                  memberDetailPopup.memberDetails.observations : "Sin observaciones"
+                            font.pixelSize: Theme.fontSizeS
+                            color: Theme.textPrimary
+                            wrapMode: Text.Wrap
+                            Layout.fillWidth: true
                         }
                     }
                     
