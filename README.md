@@ -19,7 +19,7 @@
   <tr>
     <td align="center">
       <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214548.png?raw=true" width="400" alt="Nueva Suscripción"/>
-      <br><sub><b>Nueva Suscripción</b></sub>
+      <br><sub><b>Gestion De Planes</b></sub>
     </td>
     <td align="center">
       <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214610.png?raw=true" width="400" alt="Gestión de Planes"/>
