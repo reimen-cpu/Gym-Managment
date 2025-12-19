@@ -135,7 +135,7 @@ Vista general con métricas clave del gimnasio:
 
 ### Opción 1: Ejecutable Pre-compilado (Recomendado)
 
-1. **Descarga** la última versión desde la carpeta `Build/`
+1. 1. **Descarga** la última versión desde [release](https://release-assets.githubusercontent.com/github-production-release-asset/1119004252/500135b6-818c-40f4-a806-00b292e50cc6?sp=r&sv=2018-11-09&sr=b&spr=https&se=2025-12-19T02%3A47%3A14Z&rscd=attachment%3B+filename%3DGymOS.rar&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2025-12-19T01%3A46%3A23Z&ske=2025-12-19T02%3A47%3A14Z&sks=b&skv=2018-11-09&sig=i0UANA8EbD0vDIRQzN4LF2kBbljb8UQOJaFkMlSgIMY%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc2NjExMDU4NCwibmJmIjoxNzY2MTA4Nzg0LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.VrIegiVfNeB_3ic_J3_zNzD29QqbEqj2mAH09LpzJyk&response-content-disposition=attachment%3B%20filename%3DGymOS.rar&response-content-type=application%2Foctet-stream)
 2. **Extrae** el contenido en cualquier ubicación
 3. **Ejecuta** `GymOS.exe`
 
