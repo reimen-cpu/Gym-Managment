@@ -1,5 +1,53 @@
 # 🏋️ GymOS - Sistema de Gestión de Gimnasios
 
+<!-- Screenshots Gallery - Instagram Style Carousel -->
+<div align="center">
+
+<h3>📸 Vista Previa de la Aplicación</h3>
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214339.png?raw=true" width="400" alt="Dashboard"/>
+      <br><sub><b>Dashboard</b></sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214349.png?raw=true" width="400" alt="Suscripciones"/>
+      <br><sub><b>Suscripciones</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214548.png?raw=true" width="400" alt="Nueva Suscripción"/>
+      <br><sub><b>Nueva Suscripción</b></sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214610.png?raw=true" width="400" alt="Gestión de Planes"/>
+      <br><sub><b>Gestión de Planes</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214618.png?raw=true" width="400" alt="Finanzas"/>
+      <br><sub><b>Finanzas</b></sub>
+    </td>
+    <td align="center">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214734.png?raw=true" width="400" alt="Gráficos"/>
+      <br><sub><b>Gráficos</b></sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214824.png?raw=true" width="400" alt="Modo Oscuro"/>
+      <br><sub><b>Modo Oscuro</b></sub>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+---
+
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
