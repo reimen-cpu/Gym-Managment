@@ -13,7 +13,7 @@
     </td>
     <td align="center">
       <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214349.png?raw=true" width="400" alt="Suscripciones"/>
-      <br><sub><b>Suscripciones</b></sub>
+      <br><sub><b>Nueva Suscripción</b></sub>
     </td>
   </tr>
   <tr>
@@ -23,7 +23,7 @@
     </td>
     <td align="center">
       <img src="https://github.com/reimen-cpu/Gym-Managment/blob/main/readme%20images/Captura%20de%20pantalla%202025-12-18%20214610.png?raw=true" width="400" alt="Gestión de Planes"/>
-      <br><sub><b>Gestión de Planes</b></sub>
+      <br><sub><b>Suscripciones</b></sub>
     </td>
   </tr>
   <tr>
